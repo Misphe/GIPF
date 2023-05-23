@@ -4,12 +4,14 @@ class GipfPlayer {
 private:
 	int pawnsAmount;
 	int maxPawns;
+	bool alive;
 	char symbol;
 
 public:
 	GipfPlayer(int startingpawnsAmount, int maxPawns, char symbol) : symbol(symbol) {
 		this->pawnsAmount = startingpawnsAmount;
 		this->maxPawns = maxPawns;
+		this->alive = true;
 	}
 
 	void set(int set_pawnsAmount, int set_maxPawns) {
@@ -27,6 +29,10 @@ public:
 		return maxPawns - pawnsAmount;
 	}
 
+	bool lost() {
+		return alive;
+	}
+
 	int getMaxPawns() {
 		return maxPawns;
 	}
@@ -40,6 +46,14 @@ public:
 	}
 
 	void usePawn() {
+		if (pawnsAmount == 0) {
+			return;
+		}
+
 		pawnsAmount--;
+
+		if (pawnsAmount == 0) {
+			alive = false;
+		}
 	}
 };

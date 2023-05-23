@@ -4,6 +4,7 @@
 class Game {
 protected:
 	bool running;
+	bool finished;
 
 public:
 	virtual void print() = 0;

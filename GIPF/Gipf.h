@@ -15,6 +15,7 @@ private:
 	int size;
 	int turn;
 	int pawnsCollect;
+	std::string state;
 
 	GipfPlayer white;
 	GipfPlayer black;
@@ -23,6 +24,8 @@ public:
 	Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
 		int whitePawns, int blackPawns, int turn);
 	void operator=(Gipf& new_gipf);
+
+	std::pair<int, int> countChainsOnBoard();
 
 	void print() override;
 	void executeCommand(int command) override;
@@ -51,9 +54,20 @@ public:
 	int checkIfUnknownDirection(std::pair<int, int>& source_p, std::pair<int, int>& field_p);
 	int checkIfWrongStartingField(std::pair<int, int>& source_p);
 	int checkIfWrongDestinationField(std::pair<int, int>& field_p);
+	void setBadMoveState(std::string& pushSource, std::string& field);
+
+	void printGameState();
+	std::string getGameState();
 
 	bool insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> coords);
 	int countRowsInColumn(int index);
 	int countRowStart(int index);
+	
+	std::pair<int, int> getChainsHorizontally();
+	std::pair<int, int> getChainsVertically();
+	std::pair<int, int> getChainsDiagonally();
+
+	void handleChainsCountingAtLoading(int& col, int& row, int& whiteCount, int& blackCount,
+		int& totalWhiteRows, int& totalBlackRows, int& mode);
 };
 

@@ -1,5 +1,7 @@
 #include "Gipf.h"
 #include "Defines.h"
+#include <string>
+#include <iostream>
 
 using std::cin;
 
@@ -11,6 +13,8 @@ Gipf::Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxP
 	this->running = true;
 	this->turn = turn;
 	this->pawnsCollect = pawnsCollect;
+	this->finished = false;
+	this->state = IN_PROGRESS;
 }
 
 void Gipf::operator=(Gipf& new_gipf) {
@@ -21,6 +25,23 @@ void Gipf::operator=(Gipf& new_gipf) {
 	this->pawnsCollect = new_gipf.pawnsCollect;
 	this->white = new_gipf.white;
 	this->black = new_gipf.black;
+}
+
+std::pair<int, int> Gipf::countChainsOnBoard() {
+
+	std::pair<int, int> sum;
+	std::pair<int, int> tmp;
+	tmp = getChainsHorizontally();
+	sum.first += tmp.first;
+	sum.second += tmp.second;
+	tmp = getChainsVertically();
+	sum.first += tmp.first;
+	sum.second += tmp.second;
+	tmp = getChainsDiagonally();
+	sum.first += tmp.first;
+	sum.second += tmp.second;
+
+	return std::pair<int, int>(sum.first, sum.second);
 }
 
 void Gipf::print() {
@@ -61,7 +82,7 @@ void Gipf::executeCommand(int command) {
 			doMove();
 			break;
 		case PRINT_GAME_STATE:
-
+			printGameState();
 			break;
 		case GEN_ALL_POS_MOV:
 
@@ -85,6 +106,21 @@ void Gipf::executeCommand(int command) {
 
 			break;
 	}
+}
+
+void Gipf::printGameState() {
+	std::cout << getGameState() << "\n";
+}
+
+std::string Gipf::getGameState() {
+	if (white.lost()) {
+		return BLACKWON;
+	}
+	if (black.lost()) {
+		return WHITEWON;
+	}
+
+	return state;
 }
 
 vector<vector<char>> Gipf::createBoard(int size) {
@@ -179,7 +215,19 @@ bool Gipf::loadBoardState() {
 		}
 	}
 
-	if (whiteCount != white.getUsedPawns()) {
+	std::pair<int, int> rows = countChainsOnBoard();
+	int sum = rows.first + rows.second;
+
+	if (sum != 0) {
+		if (sum == 1) {
+			std::cout << "ERROR_FOUND_" + std::to_string(sum) + "_ROW_OF_LENGTH_K\n";
+		}
+		// plural form??
+		else if (sum > 1) {
+			std::cout << "ERROR_FOUND_" + std::to_string(sum) + "_ROWS_OF_LENGTH_K\n";
+		}
+	}
+	else if (whiteCount != white.getUsedPawns()) {
 		std::cout << "WRONG_WHITE_PAWNS_NUMBER\n";
 	}
 	else if (blackCount != black.getUsedPawns()) {
@@ -192,6 +240,7 @@ bool Gipf::loadBoardState() {
 		success = true;
 		std::cout << "BOARD_STATE_OK\n";
 	}
+
 
 	if (exitProgramm) {
 		exit(0);
@@ -302,6 +351,11 @@ int Gipf::moveValid(std::string& source, std::string& field) {
 	return NOERRORS;
 }
 
+void Gipf::setBadMoveState(std::string& pushSource, std::string& field) {
+	state = BAD_MOVE;
+	state = state + ' ' + currentColor() + ' ' + pushSource + "-" + field;
+}
+
 void Gipf::doMove() {
 	std::string move, pushSource, field;
 	cin >> move;
@@ -314,6 +368,8 @@ void Gipf::doMove() {
 
 	int valid = moveValid(pushSource, field);
 	if (valid != 0) {
+		setBadMoveState(pushSource, field);
+
 		switch (valid) {
 		case BAD_MOVE_FIRST_IS_WRONG_INDEX:
 			std::cout << "BAD_MOVE_" << pushSource << "_IS_WRONG_INDEX\n";
@@ -351,7 +407,6 @@ void Gipf::doMove() {
 	else {
 		putPawn(x, y);
 	}
-
 }
 
 void Gipf::loadMoveSegments(std::string& move, std::string& first, std::string& second) {
@@ -615,3 +670,148 @@ int Gipf::countRowStart(int index) {
 	}
 }
 
+std::pair<int, int> Gipf::getChainsHorizontally() {
+	int whiteCount = 0;
+	int blackCount = 0;
+	int totalWhiteRows = 0;
+	int totalBlackRows = 0;
+	int mode = WHITE;
+
+	for (int row = 0; row < board.size(); row++) {
+		for (int col = 0; col < board.size(); col++) {
+			handleChainsCountingAtLoading(col, row, whiteCount, blackCount,
+				totalWhiteRows, totalBlackRows, mode);
+		}
+
+		if (whiteCount >= pawnsCollect) {
+			totalWhiteRows++;
+		}
+		else if (blackCount >= pawnsCollect) {
+			totalBlackRows++;
+		}
+		whiteCount = 0;
+		blackCount = 0;
+	}
+
+	return std::pair<int, int>(totalWhiteRows, totalBlackRows);
+}
+
+std::pair<int, int> Gipf::getChainsVertically() {
+	int whiteCount = 0;
+	int blackCount = 0;
+	int totalWhiteRows = 0;
+	int totalBlackRows = 0;
+	int mode = WHITE;
+
+	for (int col = 0; col < board.size(); col++) {
+		for (int row = 0; row < board.size(); row++) {
+			handleChainsCountingAtLoading(col, row, whiteCount, blackCount,
+				totalWhiteRows, totalBlackRows, mode);
+		}
+
+		if (whiteCount >= pawnsCollect) {
+			totalWhiteRows++;
+		}
+		else if (blackCount >= pawnsCollect) {
+			totalBlackRows++;
+		}
+		whiteCount = 0;
+		blackCount = 0;
+	}
+
+	return std::pair<int, int>(totalWhiteRows, totalBlackRows);
+}
+
+std::pair<int, int> Gipf::getChainsDiagonally() {
+	int whiteCount = 0;
+	int blackCount = 0;
+	int totalWhiteRows = 0;
+	int totalBlackRows = 0;
+	int mode = WHITE;
+
+	int col, row;
+
+	for (int rowStart = 0; rowStart < size; rowStart++) {
+		row = rowStart;
+		col = 0;
+		for (int i = 0; i < size * 2 - 1 - rowStart; i++) {
+			handleChainsCountingAtLoading(col, row, whiteCount, blackCount,
+				totalWhiteRows, totalBlackRows, mode);
+
+			row++;
+			col++;
+		}
+		if (whiteCount >= pawnsCollect) {
+			totalWhiteRows++;
+		}
+		else if (blackCount >= pawnsCollect) {
+			totalBlackRows++;
+		}
+		whiteCount = 0;
+		blackCount = 0;
+	}
+
+	for (int colStart = 1; colStart < size; colStart++) {
+		row = 0;
+		col = colStart;
+		for (int i = 0; i < size * 2 - 1 - colStart; i++) {
+			handleChainsCountingAtLoading(col, row, whiteCount, blackCount,
+				totalWhiteRows, totalBlackRows, mode);
+
+			row++;
+			col++;
+		}
+		if (whiteCount >= pawnsCollect) {
+			totalWhiteRows++;
+		}
+		else if (blackCount >= pawnsCollect) {
+			totalBlackRows++;
+		}
+		whiteCount = 0;
+		blackCount = 0;
+	}
+
+	return std::pair<int, int>(totalWhiteRows, totalBlackRows);
+}
+
+void Gipf::handleChainsCountingAtLoading(int& col, int& row, int& whiteCount, int& blackCount,
+	int& totalWhiteRows, int& totalBlackRows, int& mode) {
+
+	char curField = board[col][row];
+	switch (mode) {
+	case WHITE:
+		if (curField == WHITEPAWN) {
+			whiteCount++;
+			break;
+		}
+
+		if (whiteCount >= pawnsCollect) {
+			totalWhiteRows++;
+		}
+
+		whiteCount = 0;
+		
+		if (curField == BLACKPAWN) {
+			blackCount++;
+			mode = BLACK;
+		}
+		break;
+	case BLACK:
+		if (curField == BLACKPAWN) {
+			blackCount++;
+			break;
+		}
+
+		if (blackCount >= pawnsCollect) {
+			totalBlackRows++;
+		}
+
+		blackCount = 0;
+
+		if (curField == WHITEPAWN) {
+			whiteCount++;
+			mode = WHITE;
+		}
+		break;
+	}
+}

@@ -10,6 +10,16 @@
 
 #define PAWNSAMOUNT 15
 
+#define BLACKWON "BLACK_WON"
+#define WHITEWON "WHITE_WON"
+#define IN_PROGRESS "IN_PROGRESS"
+#define DEAD_LOCK "DEAD_LOCK"
+#define BAD_MOVE "BAD_MOVE"
+
+// modes
+#define WHITE 1
+#define BLACK 2
+
 // Commands
 #define LOAD_GAME_BOARD 1
 #define PRINT_GAME_BOARD 2

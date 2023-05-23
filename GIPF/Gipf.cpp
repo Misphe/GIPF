@@ -25,15 +25,10 @@ void Gipf::operator=(Gipf& new_gipf) {
 
 void Gipf::print() {
 
-	/*for (int k = 0; k < abs(size - 1) + 1; k++) {
-		std::cout << " ";
-	}
+	std::cout << size << " " << pawnsCollect << " " << white.getMaxPawns() <<
+		" " << black.getMaxPawns() << "\n";
 
-	for (int i = 0; i < size + 1; i++) {
-		std::cout << "+ ";
-	}
-
-	std::cout << "\n";*/
+	std::cout << white.getPawnsAmount() << " " << black.getPawnsAmount() << " " << currentColor() << "\n";
 
 	for (int i = 0; i < board.size(); i++) {
 
@@ -41,24 +36,14 @@ void Gipf::print() {
 			std::cout << " ";
 		}
 
-		// std::cout << "+ ";
-
 		for (int j = 0; j < board.size(); j++) {
 			if (board[j][i] != OUTOFMAP) {
 				std::cout << board[j][i] << " ";
 			}
 		}
-		// std::cout << BORDER;
+
 		std::cout << "\n";
 	}
-
-	/*for (int k = 0; k < abs(size - 1) + 1; k++) {
-		std::cout << " ";
-	}
-
-	for (int i = 0; i < size + 1; i++) {
-		std::cout << "+ ";
-	}*/
 
 	int x = 0;
 }
@@ -219,7 +204,7 @@ void Gipf::putPawn(int x, int y) {
 	GipfPlayer* player = turn == WHITETURN ? &white : &black;
 	board[x][y] = player->getPawnsSymbol();
 
-	std::cout << "MOVE_COMMITTED";
+	std::cout << "MOVE_COMMITTED\n";
 
 	player->usePawn();
 	endTurn();
@@ -230,43 +215,27 @@ void Gipf::endTurn() {
 }
 
 int Gipf::checkIfWrongIndex(std::pair<int, int>& source_p, std::pair<int, int>& field_p) {
-	if (source_p.first < -1) {
-		return BAD_MOVE_FIRST_IS_WRONG_INDEX;
-	}
-	if (source_p.second < -1) {
-		return BAD_MOVE_FIRST_IS_WRONG_INDEX;
-	}
-	if ((int)source_p.first > (int)board.size() + 1) {
-		return BAD_MOVE_FIRST_IS_WRONG_INDEX;
-	}
-	int rows = 0;
-	if (source_p.first < size) {
-		rows = (size + 1) + source_p.first + 1;
-	}
-	else {
-		rows = (size + 1) + ((int)board.size() - source_p.first);
-	}
-	if (source_p.second >= rows) {
+	auto tmp = createBoard(size + 1);
+
+	// -1 00 01 02 03 04 05
+	// a4 b5 c6 d7 -1 -1 -1  |-1
+	// a3 b4 c5 d6 e6 -1 -1  |00
+	// a2 b3 c4 d5 e5 f5 -1  |01
+	// a1 b2 c3 d4 e4 f4 g4  |02
+	// -1 b1 c2	d3 e3 f3 g3  |03
+	// -1 -1 c1 d2 e2 f2 g2  |04
+	// -1 -1 -1 d1 e1 f1 g1  |05
+
+	std::pair<int, int> tmp_p = source_p;
+	tmp_p.first++;
+	tmp_p.second++;
+
+	// first coords
+	if (!insideBoard(tmp, tmp_p)) {
 		return BAD_MOVE_FIRST_IS_WRONG_INDEX;
 	}
 
-	if (field_p.first < -1) {
-		return BAD_MOVE_SECOND_IS_WRONG_INDEX;
-	}
-	if (field_p.second < -1) {
-		return BAD_MOVE_SECOND_IS_WRONG_INDEX;
-	}
-	if ((int)field_p.first > (int)board.size() + 1) {
-		return BAD_MOVE_SECOND_IS_WRONG_INDEX;
-	}
-	rows = 0;
-	if (field_p.first < size) {
-		rows = (size + 1) + field_p.first + 1;
-	}
-	else {
-		rows = (size + 1) + ((int)board.size() - field_p.first);
-	}
-	if (field_p.second >= rows) {
+	if (!insideBoard(tmp, field_p)) {
 		return BAD_MOVE_SECOND_IS_WRONG_INDEX;
 	}
 
@@ -274,11 +243,33 @@ int Gipf::checkIfWrongIndex(std::pair<int, int>& source_p, std::pair<int, int>& 
 }
 
 int Gipf::checkIfUnknownDirection(std::pair<int,int>& source_p, std::pair<int, int>& field_p) {
+
+	// coords are not next to each other
 	if (abs(source_p.first - field_p.first) > 1) {
 		return UNKNOWN_MOVE_DIRECTION;
 	}
 	if (abs(source_p.second - field_p.second) > 1) {
 		return UNKNOWN_MOVE_DIRECTION;
+	}
+
+	return NOERRORS;
+}
+
+int Gipf::checkIfWrongStartingField(std::pair<int, int>& source_p) {
+	
+	// if start is inside the normal board, it is wrongly placed then
+	if (insideBoard(board, source_p)) {
+		return BAD_MOVE__IS_WRONG_STARTING_FIELD;
+	}
+
+	return NOERRORS;
+}
+
+int Gipf::checkIfWrongDestinationField(std::pair<int, int>& field_p) {
+
+	// if start is inside the normal board, it is wrongly placed then
+	if (!insideBoard(board, field_p)) {
+		return BAD_MOVE__IS_WRONG_DESTINATION_FIELD;
 	}
 
 	return NOERRORS;
@@ -297,6 +288,18 @@ int Gipf::moveValid(std::string& source, std::string& field) {
 	if (unknownDirection != NOERRORS) {
 		return unknownDirection;
 	}
+
+	int wrongStartingField = checkIfWrongStartingField(source_p);
+	if (wrongStartingField != NOERRORS) {
+		return wrongStartingField;
+	}
+
+	int wrongDestinationField = checkIfWrongDestinationField(field_p);
+	if (wrongDestinationField != NOERRORS) {
+		return wrongDestinationField;
+	}
+
+	return NOERRORS;
 }
 
 void Gipf::doMove() {
@@ -304,8 +307,6 @@ void Gipf::doMove() {
 	cin >> move;
 
 	loadMoveSegments(move, pushSource, field);
-
-	std::cout << pushSource << " " << field << "\n";
 
 	std::pair<int, int> coords = getWhereToPut(field);
 	int x = coords.first;
@@ -326,6 +327,14 @@ void Gipf::doMove() {
 			std::cout << "UNKNOWN_MOVE_DIRECTION\n";
 			return;
 			break;
+		case BAD_MOVE__IS_WRONG_STARTING_FIELD:
+			std::cout << "BAD_MOVE_" << pushSource << "_IS_WRONG_STARTING_FIELD\n";
+			return;
+			break;
+		case BAD_MOVE__IS_WRONG_DESTINATION_FIELD:
+			std::cout << "BAD_MOVE_" << field << "_IS_WRONG_DESTINATION_FIELD\n";
+			return;
+			break;
 		}
 	}
 
@@ -334,6 +343,9 @@ void Gipf::doMove() {
 
 		if (success) {
 			putPawn(x, y);
+		}
+		else {
+			std::cout << "BAD_MOVE_ROW_IS_FULL\n";
 		}
 	}
 	else {
@@ -373,17 +385,10 @@ std::pair<int, int> Gipf::getWhereToPut(std::string& index) {
 	// calculate coords
 	int index1, index2, rows = size;
 	index1 = int_letter - 1;
-	/*for (int i = 0; i < board.size(); i++) {
-		if (i == index1) {
-			break;
-		}
 
-		rows += (i < size ? 1 : -1);
-	}*/
+	rows = countRowsInColumn(index1);
 
-	rows = (int)board.size() - abs(size - 1 - index1);
-
-	index2 = rows - number + 1;
+	index2 = rows - number + 1 + countRowStart(index1);
 
 	return std::pair<int, int>(index1, index2);
 }
@@ -431,6 +436,8 @@ bool Gipf::pushLine(std::string& pushSource, std::string& field, std::pair<int, 
 	}
 
 	board[x][y] = EMPTYCELL;
+
+	return true;
 }
 
 void Gipf::loadGameBoard() {
@@ -565,19 +572,46 @@ std::pair<int, int> Gipf::getPushVector(std::string& pushSource, std::string& fi
 	case RIGHTSMALLER:
 		switch (numberRatio) {
 		case LEFTSMALLER:
-			std::cout << "ERROR GETPUSHVECTOR - RIGHTSMALLER -> LEFTSMALLER\n";
+			dy = -1;
+			dx = -1;
 			break;
 		case EQUAL:
 			dx = -1;
 			break;
 		case RIGHTSMALLER:
-			dy = -1;
-			dx = -1;
+			std::cout << "ERROR GETPUSHVECTOR - RIGHTSMALLER -> RIGHTSMALLER\n";
 			break;
 		}
 		break;
 	}
 
 	return std::pair<int, int>(dx, dy);
+}
+
+int Gipf::countRowsInColumn(int index) {
+	return (int)board.size() - abs(size - 1 - index);
+}
+
+bool Gipf::insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> coords) {
+	if (coords.first < 0 || coords.first > checkedBoard.size() - 1) {
+		return false;
+	}
+	if (coords.second < 0 || coords.second > checkedBoard.size() - 1) {
+		return false;
+	}
+	if (checkedBoard[coords.first][coords.second] == OUTOFMAP) {
+		return false;
+	}
+
+	return true;
+}
+
+int Gipf::countRowStart(int index) {
+	if (index < size) {
+		return 0;
+	}
+	else {
+		return index - size + 1;
+	}
 }
 

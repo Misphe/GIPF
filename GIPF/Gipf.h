@@ -37,15 +37,23 @@ public:
 
 	void putPawn(int x, int y);
 	void endTurn();
-	int checkIfWrongIndex(std::pair<int, int>& source_p, std::pair<int, int>& field_p);
-	int checkIfUnknownDirection(std::pair<int, int>& source_p, std::pair<int, int>& field_p);
-	int moveValid(std::string& source, std::string& field);
 
 	void doMove();
 	static void loadMoveSegments(std::string& move, std::string& start, std::string& dir);
 	static std::pair<std::string, int> separateIndex(std::string& index);
-	std::pair<int, int> getPushVector(std::string& pushSource, std::string& field);
-	std::pair<int, int> getWhereToPut(std::string& index);
+
 	bool pushLine(std::string& pushSource, std::string& field, std::pair<int, int>& coords);
+	std::pair<int, int> getWhereToPut(std::string& index);
+	std::pair<int, int> getPushVector(std::string& pushSource, std::string& field);
+
+	int moveValid(std::string& source, std::string& field);
+	int checkIfWrongIndex(std::pair<int, int>& source_p, std::pair<int, int>& field_p);
+	int checkIfUnknownDirection(std::pair<int, int>& source_p, std::pair<int, int>& field_p);
+	int checkIfWrongStartingField(std::pair<int, int>& source_p);
+	int checkIfWrongDestinationField(std::pair<int, int>& field_p);
+
+	bool insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> coords);
+	int countRowsInColumn(int index);
+	int countRowStart(int index);
 };
 

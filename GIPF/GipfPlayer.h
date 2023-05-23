@@ -2,36 +2,44 @@
 
 class GipfPlayer {
 private:
-	int pawnAmount;
+	int pawnsAmount;
 	int maxPawns;
 	char symbol;
 
 public:
-	GipfPlayer(int startingPawnAmount, int maxPawns, char symbol) : symbol(symbol) {
-		this->pawnAmount = startingPawnAmount;
+	GipfPlayer(int startingpawnsAmount, int maxPawns, char symbol) : symbol(symbol) {
+		this->pawnsAmount = startingpawnsAmount;
 		this->maxPawns = maxPawns;
 	}
 
-	void set(int set_pawnAmount, int set_maxPawns) {
-		this->pawnAmount = set_pawnAmount;
+	void set(int set_pawnsAmount, int set_maxPawns) {
+		this->pawnsAmount = set_pawnsAmount;
 		this->maxPawns = set_maxPawns;
 	}
 
 	void operator=(GipfPlayer& other) {
-		this->pawnAmount = other.pawnAmount;
+		this->pawnsAmount = other.pawnsAmount;
 		this->maxPawns = other.maxPawns;
 		this->symbol = other.symbol;
 	}
 
 	int getUsedPawns() {
-		return maxPawns - pawnAmount;
+		return maxPawns - pawnsAmount;
+	}
+
+	int getMaxPawns() {
+		return maxPawns;
 	}
 
 	char getPawnsSymbol() {
 		return symbol;
 	}
 
+	int getPawnsAmount() {
+		return pawnsAmount;
+	}
+
 	void usePawn() {
-		pawnAmount--;
+		pawnsAmount--;
 	}
 };

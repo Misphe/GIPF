@@ -45,6 +45,10 @@ public:
 		return pawnsAmount;
 	}
 
+	void returnPawn() {
+		pawnsAmount++;
+	}
+
 	void usePawn() {
 		if (pawnsAmount == 0) {
 			return;

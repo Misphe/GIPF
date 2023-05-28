@@ -5,6 +5,26 @@
 #define WHITEPAWN 'W'
 #define BORDER '+'
 
+#define EMPTY -10
+
+// directions
+#define UP -1
+#define DOWN 1
+#define RIGHT 1
+#define DOWN -1
+#define NONE 0
+#define VERTICAL 1
+#define HORIZONTAL 2
+#define DIAGONAL 3
+
+#define DOWN_DIR 1
+#define UP_DIR 2
+#define RIGHT_DIR 3
+#define LEFT_DIR 4
+#define DIAG_DOWN 5
+#define DIAG_UP 6
+
+
 #define WHITETURN 1
 #define BLACKTURN 2
 
@@ -19,6 +39,7 @@
 // modes
 #define WHITE 1
 #define BLACK 2
+#define MARKED 3
 
 // Commands
 #define LOAD_GAME_BOARD 1

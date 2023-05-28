@@ -5,6 +5,7 @@
 #include <vector>
 #include "Defines.h"
 #include "GipfPlayer.h"
+#include "GipfPointsManager.h"
 
 using std::unique_ptr;
 using std::vector;
@@ -16,6 +17,9 @@ private:
 	int turn;
 	int pawnsCollect;
 	std::string state;
+
+	GipfPointsManager manager;
+	friend class GipfPointsManager;
 
 	GipfPlayer white;
 	GipfPlayer black;
@@ -32,13 +36,16 @@ public:
 	int translateCommand(std::string command) override;
 
 	char currentColor();
+	GipfPlayer* currentPlayer();
+
+	int getPawnsCollect();
 
 	static vector<vector<char>> createBoard(int size);
 
 	void loadGameBoard();
 	bool loadBoardState();
 
-	void putPawn(int x, int y);
+	void putPawn(int x, int y, std::pair<int, int>& pushVector, bool movedLine);
 	void endTurn();
 
 	void doMove();
@@ -59,7 +66,8 @@ public:
 	void printGameState();
 	std::string getGameState();
 
-	bool insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> coords);
+	static bool insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> coords);
+	static bool insideBoard(vector<vector<char>>& checkedBoard, int col, int row);
 	int countRowsInColumn(int index);
 	int countRowStart(int index);
 	

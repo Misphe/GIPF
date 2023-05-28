@@ -24,6 +24,9 @@
     <ClCompile Include="Controller.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="GipfPointsManager.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gipf.h">
@@ -39,6 +42,9 @@
       <Filter>Pliki zasobów</Filter>
     </ClInclude>
     <ClInclude Include="Controller.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="GipfPointsManager.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
   </ItemGroup>

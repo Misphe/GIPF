@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="Gipf.cpp" />
+    <ClCompile Include="GipfPointsManager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -137,6 +138,7 @@
     <ClInclude Include="Gipf.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="GipfPlayer.h" />
+    <ClInclude Include="GipfPointsManager.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

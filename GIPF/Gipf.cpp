@@ -1,5 +1,6 @@
 #include "Gipf.h"
 #include "Defines.h"
+#include "GipfPointsManager.h"
 #include <string>
 #include <iostream>
 
@@ -7,7 +8,8 @@ using std::cin;
 
 Gipf::Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
 	int whitePawns, int blackPawns, int turn) 
-	: black(blackPawns, blackMaxPawns, BLACKPAWN), white(whitePawns, whiteMaxPawns, WHITEPAWN) {
+	: black(blackPawns, blackMaxPawns, BLACKPAWN), white(whitePawns, whiteMaxPawns, WHITEPAWN),
+	manager(*this) {
 	this->board = board;
 	this->size = size;
 	this->running = true;
@@ -227,10 +229,10 @@ bool Gipf::loadBoardState() {
 			std::cout << "ERROR_FOUND_" + std::to_string(sum) + "_ROWS_OF_LENGTH_K\n";
 		}
 	}
-	else if (whiteCount != white.getUsedPawns()) {
+	else if (whiteCount > white.getUsedPawns()) {
 		std::cout << "WRONG_WHITE_PAWNS_NUMBER\n";
 	}
-	else if (blackCount != black.getUsedPawns()) {
+	else if (blackCount > black.getUsedPawns()) {
 		std::cout << "WRONG_BLACK_PAWNS_NUMBER\n";
 	}
 	else if (WRONG_BOARD_ROW_LENGTH) {
@@ -249,13 +251,16 @@ bool Gipf::loadBoardState() {
 	return success;
 }
 
-void Gipf::putPawn(int x, int y) {
+void Gipf::putPawn(int x, int y, std::pair<int, int>& pushVector, bool movedLine) {
 	GipfPlayer* player = turn == WHITETURN ? &white : &black;
 	board[x][y] = player->getPawnsSymbol();
 
 	std::cout << "MOVE_COMMITTED\n";
 
 	player->usePawn();
+
+	manager.checkChains(x, y, pushVector, movedLine);
+
 	endTurn();
 }
 
@@ -394,18 +399,19 @@ void Gipf::doMove() {
 		}
 	}
 
+	std::pair<int, int> pushVector = getPushVector(pushSource, field);
 	if (board[x][y] != EMPTYCELL) {
 		bool success = pushLine(pushSource, field, coords);
 
 		if (success) {
-			putPawn(x, y);
+			putPawn(x, y, pushVector, true);
 		}
 		else {
 			std::cout << "BAD_MOVE_ROW_IS_FULL\n";
 		}
 	}
 	else {
-		putPawn(x, y);
+		putPawn(x, y, pushVector, false);
 	}
 }
 
@@ -522,6 +528,12 @@ int Gipf::translateCommand(std::string command) {
 	else if (command == "P") {
 		return PRINT_GAME_BOARD;
 	}
+	else if (command == "p") {
+		return PRINT_GAME_BOARD;
+	}
+	else if (command == "d") {
+		return DO_MOVE;
+	}
 	else if (command == "DO_MOVE") {
 		return DO_MOVE;
 	}
@@ -553,6 +565,14 @@ int Gipf::translateCommand(std::string command) {
 
 char Gipf::currentColor() {
 	return turn == WHITETURN ? WHITEPAWN : BLACKPAWN;
+}
+
+GipfPlayer* Gipf::currentPlayer() {
+	return turn == WHITE ? &white : &black;
+}
+
+int Gipf::getPawnsCollect() {
+	return pawnsCollect;
 }
 
 std::pair<std::string, int> Gipf::separateIndex(std::string& index) {
@@ -655,6 +675,20 @@ bool Gipf::insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> c
 		return false;
 	}
 	if (checkedBoard[coords.first][coords.second] == OUTOFMAP) {
+		return false;
+	}
+
+	return true;
+}
+
+bool Gipf::insideBoard(vector<vector<char>>& checkedBoard, int col, int row) {
+	if (col < 0 || col > checkedBoard.size() - 1) {
+		return false;
+	}
+	if (row < 0 || row > checkedBoard.size() - 1) {
+		return false;
+	}
+	if (checkedBoard[col][row] == OUTOFMAP) {
 		return false;
 	}
 

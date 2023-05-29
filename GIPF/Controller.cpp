@@ -2,7 +2,7 @@
 #include "Defines.h"
 #include <iostream>
 
-Controller::Controller(Game* new_game) : game(new_game) {}
+Controller::Controller(Game2D* new_game) : game(new_game) {}
 
 std::string Controller::getCommand() {
     std::string command;

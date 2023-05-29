@@ -9,14 +9,30 @@ using std::cin;
 Gipf::Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
 	int whitePawns, int blackPawns, int turn) 
 	: black(blackPawns, blackMaxPawns, BLACKPAWN), white(whitePawns, whiteMaxPawns, WHITEPAWN),
-	manager(*this) {
+	manager(*this), solver(*this) {
 	this->board = board;
 	this->size = size;
 	this->running = true;
+	this->boardEmpty = false;
+	this->badMove.first = false;
 	this->turn = turn;
 	this->pawnsCollect = pawnsCollect;
 	this->finished = false;
 	this->state = IN_PROGRESS;
+}
+
+Gipf::Gipf(Gipf& other) : manager(*this), solver(*this),
+black(other.black.getPawnsAmount(), other.black.getMaxPawns(), other.black.getPawnsSymbol()),
+white(other.white.getPawnsAmount(), other.white.getMaxPawns(), other.white.getPawnsSymbol()) {
+	this->board = other.board;
+	this->size = other.size;
+	this->running = other.running;
+	this->boardEmpty = other.boardEmpty;
+	this->badMove.first = other.badMove.first;
+	this->turn = other.turn;
+	this->pawnsCollect = other.pawnsCollect;
+	this->finished = other.isRunning();
+	this->state = other.getGameState();
 }
 
 void Gipf::operator=(Gipf& new_gipf) {
@@ -47,6 +63,11 @@ std::pair<int, int> Gipf::countChainsOnBoard() {
 }
 
 void Gipf::print() {
+
+	if (boardEmpty) {
+		std::cout << "EMPTY_BOARD\n";
+		return;
+	}
 
 	std::cout << size << " " << pawnsCollect << " " << white.getMaxPawns() <<
 		" " << black.getMaxPawns() << "\n";
@@ -87,7 +108,7 @@ void Gipf::executeCommand(int command) {
 			printGameState();
 			break;
 		case GEN_ALL_POS_MOV:
-
+			printPossibleMoves();
 			break;
 		case GEN_ALL_POS_MOV_EXT:
 
@@ -110,19 +131,56 @@ void Gipf::executeCommand(int command) {
 	}
 }
 
+void Gipf::printPossibleMoves() {
+	solver.printAllPossibilities();
+}
+
 void Gipf::printGameState() {
 	std::cout << getGameState() << "\n";
 }
 
 std::string Gipf::getGameState() {
-	if (white.lost()) {
-		return BLACKWON;
+	std::string currentState;
+	if (madeBadMove()) {
+		currentState =  "BAD_MOVE " + std::string(1, currentColor()) + " " + badMove.second;
 	}
-	if (black.lost()) {
-		return WHITEWON;
+	else if (isDeadLock()) {
+		currentState = "DEAD_LOCK " + std::string(1, currentColor());
+	}
+	else if (white.lost()) {
+		currentState = BLACKWON;
+	}
+	else if (black.lost()) {
+		currentState = WHITEWON;
+	}
+	else {
+		currentState = IN_PROGRESS;
+	}
+	return currentState;
+}
+
+bool Gipf::madeBadMove() {
+	return badMove.first;
+}
+
+bool Gipf::isDeadLock() {
+	for (int row = 0; row < board.size(); row++) {
+		for(int col = 0; col < board.size(); col++) {
+			if (!insideBoard(board, col, row)) {
+				continue;
+			}
+
+			if (board[col][row] == EMPTYCELL) {
+				return false;
+			}
+		}
 	}
 
-	return state;
+	return true;
+}
+
+void Gipf::setTurnCorrect() {
+	badMove.first = false;
 }
 
 vector<vector<char>> Gipf::createBoard(int size) {
@@ -251,17 +309,12 @@ bool Gipf::loadBoardState() {
 	return success;
 }
 
-void Gipf::putPawn(int x, int y, std::pair<int, int>& pushVector, bool movedLine) {
+void Gipf::putPawn(int x, int y) {
+
 	GipfPlayer* player = turn == WHITETURN ? &white : &black;
 	board[x][y] = player->getPawnsSymbol();
-
-	std::cout << "MOVE_COMMITTED\n";
-
 	player->usePawn();
 
-	manager.checkChains(x, y, pushVector, movedLine);
-
-	endTurn();
 }
 
 void Gipf::endTurn() {
@@ -331,8 +384,8 @@ int Gipf::checkIfWrongDestinationField(std::pair<int, int>& field_p) {
 
 int Gipf::moveValid(std::string& source, std::string& field) {
 
-	std::pair<int, int> source_p = getWhereToPut(source);
-	std::pair<int, int> field_p = getWhereToPut(field);
+	std::pair<int, int> source_p = getCoordinates(source);
+	std::pair<int, int> field_p = getCoordinates(field);
 	int wrongIndex = checkIfWrongIndex(source_p, field_p);
 	if (wrongIndex != NOERRORS) {
 		return wrongIndex;
@@ -359,59 +412,90 @@ int Gipf::moveValid(std::string& source, std::string& field) {
 void Gipf::setBadMoveState(std::string& pushSource, std::string& field) {
 	state = BAD_MOVE;
 	state = state + ' ' + currentColor() + ' ' + pushSource + "-" + field;
+
+	badMove.first = true;
+	badMove.second = pushSource + ' ' + field;
 }
 
 void Gipf::doMove() {
-	std::string move, pushSource, field;
-	cin >> move;
+	std::string pushSource, field;
+	std::string move, start, end;
+	char chainTurn;
 
+	getMove(move, chainTurn, start, end);
 	loadMoveSegments(move, pushSource, field);
 
-	std::pair<int, int> coords = getWhereToPut(field);
+	std::pair<int, int> coords = getCoordinates(field);
 	int x = coords.first;
 	int y = coords.second;
 
 	int valid = moveValid(pushSource, field);
-	if (valid != 0) {
+	if (valid != NOERRORS) {
 		setBadMoveState(pushSource, field);
-
-		switch (valid) {
-		case BAD_MOVE_FIRST_IS_WRONG_INDEX:
-			std::cout << "BAD_MOVE_" << pushSource << "_IS_WRONG_INDEX\n";
-			return;
-			break;
-		case BAD_MOVE_SECOND_IS_WRONG_INDEX:
-			std::cout << "BAD_MOVE_" << field << "_IS_WRONG_INDEX\n";
-			return;
-			break;
-		case UNKNOWN_MOVE_DIRECTION:
-			std::cout << "UNKNOWN_MOVE_DIRECTION\n";
-			return;
-			break;
-		case BAD_MOVE__IS_WRONG_STARTING_FIELD:
-			std::cout << "BAD_MOVE_" << pushSource << "_IS_WRONG_STARTING_FIELD\n";
-			return;
-			break;
-		case BAD_MOVE__IS_WRONG_DESTINATION_FIELD:
-			std::cout << "BAD_MOVE_" << field << "_IS_WRONG_DESTINATION_FIELD\n";
-			return;
-			break;
-		}
+		printBadMoveReason(valid, pushSource, field);
+		return;
 	}
 
 	std::pair<int, int> pushVector = getPushVector(pushSource, field);
+	auto boardCopy = board;
+	bool movedLine = false;
+
 	if (board[x][y] != EMPTYCELL) {
 		bool success = pushLine(pushSource, field, coords);
+		movedLine = true;
 
-		if (success) {
-			putPawn(x, y, pushVector, true);
-		}
-		else {
+		if (!success) {
 			std::cout << "BAD_MOVE_ROW_IS_FULL\n";
+			return;
 		}
 	}
+
+	putPawn(x, y);
+
+	if (!end.empty() && !manager.chainCommandValid(chainTurn, start, end)) {
+		std::swap(board, boardCopy);
+		return;
+	}
+
+	deletePossibleChains(x, y, pushVector, movedLine, start, end);
+
+	std::cout << "MOVE_COMMITTED\n";
+	badMove.first = false;
+	endTurn();
+}
+
+void Gipf::printBadMoveReason(int valid, std::string& pushSource, std::string& field) {
+	switch (valid) {
+	case BAD_MOVE_FIRST_IS_WRONG_INDEX:
+		std::cout << "BAD_MOVE_" << pushSource << "_IS_WRONG_INDEX\n";
+		return;
+		break;
+	case BAD_MOVE_SECOND_IS_WRONG_INDEX:
+		std::cout << "BAD_MOVE_" << field << "_IS_WRONG_INDEX\n";
+		return;
+		break;
+	case UNKNOWN_MOVE_DIRECTION:
+		std::cout << "UNKNOWN_MOVE_DIRECTION\n";
+		return;
+		break;
+	case BAD_MOVE__IS_WRONG_STARTING_FIELD:
+		std::cout << "BAD_MOVE_" << pushSource << "_IS_WRONG_STARTING_FIELD\n";
+		return;
+		break;
+	case BAD_MOVE__IS_WRONG_DESTINATION_FIELD:
+		std::cout << "BAD_MOVE_" << field << "_IS_WRONG_DESTINATION_FIELD\n";
+		return;
+		break;
+	}
+}
+
+void Gipf::deletePossibleChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine,
+	std::string& start, std::string& end) {
+	if (end.empty()) {
+		manager.checkChains(x, y, pushVector, movedLine);
+	}
 	else {
-		putPawn(x, y, pushVector, false);
+		manager.checkChains(pushVector, start, end);
 	}
 }
 
@@ -430,7 +514,7 @@ void Gipf::loadMoveSegments(std::string& move, std::string& first, std::string& 
 	}
 }
 
-std::pair<int, int> Gipf::getWhereToPut(std::string& index) {
+std::pair<int, int> Gipf::getCoordinates(std::string& index) {
 	std::pair<std::string, int> separated = separateIndex(index);
 	std::string letter = separated.first;
 	int number = separated.second;
@@ -501,6 +585,53 @@ bool Gipf::pushLine(std::string& pushSource, std::string& field, std::pair<int, 
 	return true;
 }
 
+bool Gipf::pushLine(std::pair<int, int>& pushSource, std::pair<int, int>& field) {
+
+	// vector of push of the line attached to the field
+	int dx = 0;
+	int dy = 0;
+	int x = field.first, y = field.second;
+	bool noSpace = true;
+
+	if (board[x][y] == EMPTYCELL) {
+		return true;
+	}
+
+	std::pair<int, int> translations = getPushVector(pushSource, field);
+	dx = translations.first;
+	dy = translations.second;
+
+	while (x + dx < board.size() && y + dy < board.size() && x + dx >= 0 && y + dy >= 0 &&
+		board[x + dx][y + dy] != OUTOFMAP) {
+
+		if (board[x][y] == EMPTYCELL) {
+			noSpace = false;
+			break;
+		}
+		x += dx;
+		y += dy;
+	}
+
+	if (noSpace && board[x][y] != EMPTYCELL) {
+		return false;
+	}
+
+	dx = -dx;
+	dy = -dy;
+
+	while (x + dx < board.size() && y + dy < board.size() && x + dx >= 0 && y + dy >= 0 &&
+		board[x + dx][y + dy] != OUTOFMAP) {
+
+		board[x][y] = board[x + dx][y + dy];
+		x += dx;
+		y += dy;
+	}
+
+	board[x][y] = EMPTYCELL;
+
+	return true;
+}
+
 void Gipf::loadGameBoard() {
 	int set_size, set_pawnsCollect;
 	int set_whiteMaxPawns, set_blackMaxPawns;
@@ -511,11 +642,11 @@ void Gipf::loadGameBoard() {
 	cin >> set_whitePawns >> set_blackPawns >> set_turn;
 	set_turn = set_turn == WHITEPAWN ? WHITETURN : BLACKTURN;
 
-	Gipf new_gipf(createBoard(set_size), set_size, set_pawnsCollect, 
+	Gipf new_gipf(createBoard(set_size), set_size, set_pawnsCollect,
 		set_whiteMaxPawns, set_blackMaxPawns, set_whitePawns, set_blackPawns, set_turn);
 
 	*this = new_gipf;
-	loadBoardState();
+	boardEmpty = !loadBoardState();
 }
 
 int Gipf::translateCommand(std::string command) {
@@ -540,7 +671,7 @@ int Gipf::translateCommand(std::string command) {
 	else if (command == "PRINT_GAME_STATE") {
 		return PRINT_GAME_STATE;
 	}
-	else if (command == "GEN_ALL_POS_MOV") {
+	else if (command == "GEN_ALL_POS_MOV" || command == "gen") {
 		return GEN_ALL_POS_MOV;
 	}
 	else if (command == "GEN_ALL_POS_MOV_EXT") {
@@ -561,6 +692,10 @@ int Gipf::translateCommand(std::string command) {
 	else {
 		return INVALID_COMMAND;
 	}
+}
+
+vector<vector<char>> Gipf::getBoard() {
+	return board;
 }
 
 char Gipf::currentColor() {
@@ -621,46 +756,83 @@ std::pair<int, int> Gipf::getPushVector(std::string& pushSource, std::string& fi
 	case LEFTSMALLER:
 		switch (numberRatio) {
 		case LEFTSMALLER:
-			dx = 1;
+			dx = RIGHT;
 			break;
 		case EQUAL:
-			dx = 1;
-			dy = 1;
+			dx = RIGHT;
+			dy = DOWN;
 			break;
 		case RIGHTSMALLER:
-			std::cout << "ERROR GETPUSHVECTOR - LEFTSMALLER -> RIGHTSMALLER\n";
+			dx = RIGHT;
+			dy = DOWN;
 		}
 		break;
 	case EQUAL:
 		switch (numberRatio) {
 		case LEFTSMALLER:
-			dy = -1;
+			dy = UP;
 			break;
 		case EQUAL:
-			std::cout << "ERROR GETPUSHVECTOR - EQUAL -> EQUAL\n";
+			// like g1-g1 so should be error earlier
+			dx = RIGHT;
 			break;
 		case RIGHTSMALLER:
-			dy = 1;
+			dy = DOWN;
 			break;
 		}
 		break;
 	case RIGHTSMALLER:
 		switch (numberRatio) {
 		case LEFTSMALLER:
-			dy = -1;
-			dx = -1;
+			dy = UP;
+			dx = LEFT;
 			break;
 		case EQUAL:
-			dx = -1;
+			dx = LEFT;
 			break;
 		case RIGHTSMALLER:
-			std::cout << "ERROR GETPUSHVECTOR - RIGHTSMALLER -> RIGHTSMALLER\n";
+			dx = LEFT;
 			break;
 		}
 		break;
 	}
 
 	return std::pair<int, int>(dx, dy);
+}
+
+std::pair<int, int> Gipf::getPushVector(std::pair<int, int>& start, std::pair<int, int>& end) {
+	std::pair<int, int> direction(NONE, NONE);
+
+	if (start.first == end.first) {
+		if (start.second > end.second) {
+			direction = { NONE, UP };
+		}
+		else {
+			direction = { NONE, DOWN };
+		}
+	}
+	else if (start.second == end.second) {
+		if (start.first > end.first) {
+			direction = { LEFT, NONE };
+		}
+		else {
+			direction = { RIGHT, NONE };
+		}
+	}
+	else {
+		if (start.first > end.first && start.second > end.second) {
+			direction = { LEFT, UP };
+		}
+		else {
+			direction = { RIGHT, DOWN };
+		}
+	}
+
+	if (direction.first == NONE && direction.second == NONE) {
+		std::cout << "error getPushVector gipf\n";
+	}
+
+	return direction;
 }
 
 int Gipf::countRowsInColumn(int index) {
@@ -848,4 +1020,27 @@ void Gipf::handleChainsCountingAtLoading(int& col, int& row, int& whiteCount, in
 		}
 		break;
 	}
+}
+
+void Gipf::getMove(std::string& move, char& turn, std::string& start, std::string& end) {
+	char sign;
+	cin >> move;
+	sign = getchar();
+	if (sign != ' ') {
+		return;
+	}
+	turn = getchar();
+
+	sign = getchar();
+	sign = getchar();
+	if (sign != ' ') {
+		return;
+	}
+	cin >> start;
+
+	sign = getchar();
+	if (sign != ' ') {
+		return;
+	}
+	cin >> end;
 }

@@ -1,7 +1,8 @@
 #pragma once
 #include <string>
+#include <vector>
 
-class Game {
+class Game2D {
 protected:
 	bool running;
 	bool finished;

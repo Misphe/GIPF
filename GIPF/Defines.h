@@ -8,11 +8,6 @@
 #define EMPTY -10
 
 // directions
-#define UP -1
-#define DOWN 1
-#define RIGHT 1
-#define DOWN -1
-#define NONE 0
 #define VERTICAL 1
 #define HORIZONTAL 2
 #define DIAGONAL 3
@@ -59,6 +54,7 @@
 #define RIGHT 1
 #define UP -1
 #define DOWN 1
+#define NONE 0
 
 // Comparisons
 #define LEFTSMALLER -1

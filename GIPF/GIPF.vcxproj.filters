@@ -27,6 +27,9 @@
     <ClCompile Include="GipfPointsManager.cpp">
       <Filter>Pliki źródłowe</Filter>
     </ClCompile>
+    <ClCompile Include="GipfAI.cpp">
+      <Filter>Pliki źródłowe</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Gipf.h">
@@ -35,7 +38,7 @@
     <ClInclude Include="Defines.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
+    <ClInclude Include="Game2D.h">
       <Filter>Pliki zasobów</Filter>
     </ClInclude>
     <ClInclude Include="GipfPlayer.h">
@@ -45,6 +48,9 @@
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
     <ClInclude Include="GipfPointsManager.h">
+      <Filter>Pliki nagłówkowe</Filter>
+    </ClInclude>
+    <ClInclude Include="GipfAI.h">
       <Filter>Pliki nagłówkowe</Filter>
     </ClInclude>
   </ItemGroup>

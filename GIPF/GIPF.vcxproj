@@ -129,6 +129,7 @@
   <ItemGroup>
     <ClCompile Include="Controller.cpp" />
     <ClCompile Include="Gipf.cpp" />
+    <ClCompile Include="GipfAI.cpp" />
     <ClCompile Include="GipfPointsManager.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
@@ -136,7 +137,8 @@
     <ClInclude Include="Controller.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Gipf.h" />
-    <ClInclude Include="Game.h" />
+    <ClInclude Include="Game2D.h" />
+    <ClInclude Include="GipfAI.h" />
     <ClInclude Include="GipfPlayer.h" />
     <ClInclude Include="GipfPointsManager.h" />
   </ItemGroup>

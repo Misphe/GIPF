@@ -30,7 +30,10 @@ public:
 	}
 
 	bool lost() {
-		return alive;
+		if (pawnsAmount == 0) {
+			return true;
+		}
+		return false;
 	}
 
 	int getMaxPawns() {

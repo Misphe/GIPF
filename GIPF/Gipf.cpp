@@ -35,6 +35,24 @@ white(other.white.getPawnsAmount(), other.white.getMaxPawns(), other.white.getPa
 	this->state = other.getGameState();
 }
 
+Gipf::Gipf(Gipf&& other) : manager(*this), solver(*this),
+black(other.black.getPawnsAmount(), other.black.getMaxPawns(), other.black.getPawnsSymbol()),
+white(other.white.getPawnsAmount(), other.white.getMaxPawns(), other.white.getPawnsSymbol()) {
+	std::swap(this->board, other.board);
+	this->size = other.size;
+	this->running = other.running;
+	this->boardEmpty = other.boardEmpty;
+	this->badMove.first = other.badMove.first;
+	this->turn = other.turn;
+	this->pawnsCollect = other.pawnsCollect;
+	this->finished = other.isRunning();
+	this->state = other.getGameState();
+}
+
+Gipf::Gipf() : black(NULL, NULL, NULL), white(NULL, NULL, NULL), manager(*this), solver(*this) {
+	running = false;
+}
+
 void Gipf::operator=(Gipf& new_gipf) {
 	this->board = new_gipf.board;
 	this->size = new_gipf.size;
@@ -43,6 +61,16 @@ void Gipf::operator=(Gipf& new_gipf) {
 	this->pawnsCollect = new_gipf.pawnsCollect;
 	this->white = new_gipf.white;
 	this->black = new_gipf.black;
+}
+
+void Gipf::operator=(Gipf&& other) {
+	std::swap(this->board, other.board);
+	this->size = other.size;
+	this->running = other.running;
+	this->turn = other.turn;
+	this->pawnsCollect = other.pawnsCollect;
+	this->white = other.white;
+	this->black = other.black;
 }
 
 std::pair<int, int> Gipf::countChainsOnBoard() {

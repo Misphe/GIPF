@@ -33,7 +33,10 @@ public:
 	Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
 		int whitePawns, int blackPawns, int turn);
 	void operator=(Gipf& new_gipf);
+	void operator=(Gipf&& new_gipf);
 	Gipf(Gipf& other);
+	Gipf(Gipf&& other);
+	Gipf();
 
 	std::pair<int, int> countChainsOnBoard();
 

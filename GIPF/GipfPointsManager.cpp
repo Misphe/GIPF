@@ -1,36 +1,41 @@
 #include "GipfPointsManager.h"
 #include "Gipf.h"
 #include "Defines.h"
+#include <set>
 using std::vector;
-
-struct Chain {
-	std::pair<int, int> start;
-	std::pair<int, int> end;
-	Chain() {
-		start = { EMPTY,EMPTY };
-		end = { EMPTY,EMPTY };
-	}
-	Chain(std::pair<int, int>& start, std::pair<int, int>& end) {
-		this->start = start;
-		this->end = end;
-	}
-};
+using std::set;
 
 GipfPointsManager::GipfPointsManager(Gipf& game) {
 	this->game = &game;
 }
 
-void GipfPointsManager::checkChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine) {
+set<Chain> GipfPointsManager::checkChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine) {
+
+	set<Chain> chains;
 
 	if (movedLine) {
-		checkMovedLine(x, y, pushVector);
+		auto foundChains = std::move(checkMovedLine(x, y, pushVector));
+		if (!foundChains.empty()) {
+			chains = std::move(foundChains);
+		}
 	}
 	else {
-		checkVertically(x, y);
-		checkHorizontally(x, y);
-		checkDiagonally(x, y);
+		Chain chain;
+		chain = std::move(checkVertically(x, y));
+		if (!chain.empty()) {
+			chains.insert(std::move(chain));
+		}
+		chain = std::move(checkHorizontally(x, y));
+		if (!chain.empty()) {
+			chains.insert(std::move(chain));
+		}
+		chain = std::move(checkDiagonally(x, y));
+		if (!chain.empty()) {
+			chains.insert(std::move(chain));
+		}
 	}
 
+	return chains;
 }
 
 void GipfPointsManager::checkChains(std::pair<int, int>& pushVector, std::string start_s, std::string end_s) {
@@ -44,68 +49,102 @@ void GipfPointsManager::checkChains(std::pair<int, int>& pushVector, std::string
 
 }
 
-void GipfPointsManager::checkVertically(int col, int row) {
+Chain GipfPointsManager::checkVertically(int col, int row) {
 
 	vector<vector<char>>& board = game->board;
 	int color = board[col][row];
 	if (color == EMPTYCELL) {
-		return;
+		return Chain();
 	}
 	
 	std::pair<int, int> start = findChainEnd(col, row, DOWN_DIR);
 	std::pair<int, int> end = findChainEnd(col, row, UP_DIR);
 	
 	int length = abs(end.second - start.second) + 1;
-	if (length >= game->getPawnsCollect()) {
-		deleteChain(start, end, color);
+
+	if (length < game->getPawnsCollect()) {
+		return Chain();
 	}
+
+	return Chain(start, end);
+
+	/*if (length >= game->getPawnsCollect()) {
+		deleteChain(start, end, color);
+	}*/
 }
 
-void GipfPointsManager::checkHorizontally(int col, int row) {
+Chain GipfPointsManager::checkHorizontally(int col, int row) {
 
 	vector<vector<char>>& board = game->board;
 	int color = board[col][row];
 	if (color == EMPTYCELL) {
-		return;
+		return Chain();
 	}
 
 	std::pair<int, int> start = findChainEnd(col, row, RIGHT_DIR);
 	std::pair<int, int> end = findChainEnd(col, row, LEFT_DIR);
 
 	int length = abs(end.first - start.first) + 1;
-	if (length >= game->getPawnsCollect()) {
-		deleteChain(start, end, color);
+
+	if (length < game->getPawnsCollect()) {
+		return Chain();
 	}
+
+	return Chain(start, end);
+
+	/*if (length >= game->getPawnsCollect()) {
+		deleteChain(start, end, color);
+	}*/
 }
 
-void GipfPointsManager::checkDiagonally(int col, int row) {
+Chain GipfPointsManager::checkDiagonally(int col, int row) {
 
 	vector<vector<char>>& board = game->board;
 	int color = board[col][row];
 	if (color == EMPTYCELL) {
-		return;
+		return Chain();
 	}
 
 	std::pair<int, int> start = findChainEnd(col, row, DIAG_DOWN);
 	std::pair<int, int> end = findChainEnd(col, row, DIAG_UP);
 
 	int length = abs(end.second - start.second) + 1;
-	if (length >= game->getPawnsCollect()) {
-		deleteChain(start, end, color);
+
+	if (length < game->getPawnsCollect()) {
+		return Chain();
 	}
+
+	return Chain(start, end);
+
+	/*if (length >= game->getPawnsCollect()) {
+		deleteChain(start, end, color);
+	}*/
 }
 
-void GipfPointsManager::checkMovedLine(int col, int row, std::pair<int, int>& pushVector) {
+set<Chain> GipfPointsManager::checkMovedLine(int col, int row, std::pair<int, int>& pushVector) {
 
 	vector<vector<char>>& board = game->board;
+	set<Chain> chains;
+	Chain chain;
 
 	while (Gipf::insideBoard(board, col, row) && board[col][row] != EMPTYCELL) {
-		checkVertically(col, row);
-		checkHorizontally(col, row);
-		checkDiagonally(col, row);
+		chain = std::move(checkVertically(col, row));
+		if (!chain.empty()) {
+			chains.insert(std::move(chain));
+		}
+		chain = std::move(checkHorizontally(col, row));
+		if (!chain.empty()) {
+			chains.insert(std::move(chain));
+		}
+		chain = std::move(checkDiagonally(col, row));
+		if (!chain.empty()) {
+			chains.insert(std::move(chain));
+		}
 		col += pushVector.first;
 		row += pushVector.second;
 	}
+
+	return chains;
 }
 
 std::pair<int, int> GipfPointsManager::findChainEnd(int col, int row, int direction) {
@@ -149,7 +188,7 @@ std::pair<int, int> GipfPointsManager::findChainEnd(int col, int row, int direct
 	return end;
 }
 
-void GipfPointsManager::deleteChain(std::pair<int, int>& start, std::pair<int, int>& end, char symbol) {
+void GipfPointsManager::deleteChain(const std::pair<int, int>& start, const std::pair<int, int>& end, char symbol) {
 	int col = start.first;
 	int row = start.second;
 	vector<vector<char>>& board = game->board;
@@ -164,7 +203,7 @@ void GipfPointsManager::deleteChain(std::pair<int, int>& start, std::pair<int, i
 	deleteMiddle(start, end, direction, symbol);
 }
 
-void GipfPointsManager::deleteAdjacent(std::pair<int, int>& start, std::pair<int, int>& dir, char symbol) {
+void GipfPointsManager::deleteAdjacent(const std::pair<int, int>& start, std::pair<int, int>& dir, char symbol) {
 	int col = start.first + dir.first;
 	int row = start.second + dir.second;
 	vector<vector<char>>& board = game->board;
@@ -217,7 +256,7 @@ bool GipfPointsManager::chainCommandValid(char turn, std::string& start_s, std::
 	return true;
 }
 
-void GipfPointsManager::deleteMiddle(std::pair<int, int>& start, std::pair<int, int>& end, 
+void GipfPointsManager::deleteMiddle(const std::pair<int, int>& start, const std::pair<int, int>& end, 
 	std::pair<int, int>& dir, char symbol) {
 	int col = start.first;
 	int row = start.second;
@@ -286,7 +325,7 @@ std::pair<int, int> GipfPointsManager::getPushVector(std::string& start_s, std::
 	return getPushVector(start, end);
 }
 
-std::pair<int, int> GipfPointsManager::getPushVector(std::pair<int, int>& start, std::pair<int, int>& end) {
+std::pair<int, int> GipfPointsManager::getPushVector(const std::pair<int, int>& start, const std::pair<int, int>& end) {
 	std::pair<int, int> direction(NONE, NONE);
 
 	if (start.first == end.first) {

@@ -9,7 +9,7 @@ protected:
 
 public:
 	virtual void print() = 0;
-	bool isRunning() {
+	bool isRunning() const {
 		return running;
 	}
 

@@ -32,10 +32,12 @@ private:
 public:
 	Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
 		int whitePawns, int blackPawns, int turn);
-	void operator=(Gipf& new_gipf);
-	void operator=(Gipf&& new_gipf);
+	Gipf operator=(Gipf& new_gipf);
+	Gipf operator=(Gipf&& new_gipf);
+	bool operator==(const Gipf& other);
 	Gipf(Gipf& other);
 	Gipf(Gipf&& other);
+	Gipf(const Gipf& other);
 	Gipf();
 
 	std::pair<int, int> countChainsOnBoard();
@@ -43,12 +45,13 @@ public:
 	void print() override;
 	void executeCommand(int command) override;
 	int translateCommand(std::string command) override;
-	vector<vector<char>> getBoard();
+	vector<vector<char>> getBoard() const;
 
 	char currentColor();
 	GipfPlayer* currentPlayer();
 
 	int getPawnsCollect();
+	GipfPointsManager* getManager();
 
 	static vector<vector<char>> createBoard(int size);
 
@@ -102,5 +105,5 @@ public:
 	
 	// solver
 	void printPossibleMoves();
+	void printUniqueMovesNumber();
 };
-

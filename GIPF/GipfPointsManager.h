@@ -1,8 +1,12 @@
 #pragma once
 #include <iostream>
+#include <vector>
+#include <set>
+#include "Chain.h"
 
 class Gipf;
-struct Chain;
+using std::set;
+using std::vector;
 
 class GipfPointsManager {
 private:
@@ -11,23 +15,23 @@ public:
 	GipfPointsManager(Gipf& game);
 
 	void checkChains(std::pair<int, int>& pushVector,std::string start_s, std::string end_s);
-	void checkChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine);
-	void checkVertically(int col, int row);
-	void checkHorizontally(int col, int row);
-	void checkDiagonally(int col, int row);
-	void checkMovedLine(int col, int row, std::pair<int, int>& pushVector);
+	set<Chain> checkChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine);
+	Chain checkVertically(int col, int row);
+	Chain checkHorizontally(int col, int row);
+	Chain checkDiagonally(int col, int row);
+	set<Chain> checkMovedLine(int col, int row, std::pair<int, int>& pushVector);
 
 	bool chainCommandValid(char turn, std::string& start_s, std::string end_s);
 
 	std::pair<int, int> findChainEnd(int col, int row, int direction);
-	void deleteChain(std::pair<int, int>& start, std::pair<int, int>& end, char symbol);
+	void deleteChain(const std::pair<int, int>& start, const std::pair<int, int>& end, char symbol);
 
-	void deleteAdjacent(std::pair<int, int>& start, std::pair<int, int>& dir, char symbol);
-	void deleteMiddle(std::pair<int, int>& start, std::pair<int, int>& end, std::pair<int, int>& dir, char symbol);
+	void deleteAdjacent(const std::pair<int, int>& start, std::pair<int, int>& dir, char symbol);
+	void deleteMiddle(const std::pair<int, int>& start, const std::pair<int, int>& end, std::pair<int, int>& dir, char symbol);
 
 	int getDirection(std::pair<int, int>& direction);
 	static int directionToDimension(int direction);
 	std::pair<int, int> getPushVector(std::string& start_s, std::string& end_s);
-	std::pair<int, int> getPushVector(std::pair<int, int>& start, std::pair<int, int>& end);
+	std::pair<int, int> getPushVector(const std::pair<int, int>& start, const std::pair<int, int>& end);
 };
 

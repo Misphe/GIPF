@@ -4,6 +4,21 @@
 #include <string>
 #include <iostream>
 
+template<typename T>
+bool vectorsEqual(const std::vector<T>& v1, const std::vector<T>& v2) {
+	if (v1.size() != v2.size()) {
+		return false;
+	}
+
+	for (int i = 0; i < v1.size(); ++i) {
+		if (v1[i] != v2[i]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 using std::cin;
 
 Gipf::Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
@@ -35,6 +50,20 @@ white(other.white.getPawnsAmount(), other.white.getMaxPawns(), other.white.getPa
 	this->state = other.getGameState();
 }
 
+Gipf::Gipf(const Gipf& other) : manager(*this), solver(*this),
+black(other.black.getPawnsAmount(), other.black.getMaxPawns(), other.black.getPawnsSymbol()),
+white(other.white.getPawnsAmount(), other.white.getMaxPawns(), other.white.getPawnsSymbol()) {
+	this->board = other.board;
+	this->size = other.size;
+	this->running = other.running;
+	this->boardEmpty = other.boardEmpty;
+	this->badMove.first = other.badMove.first;
+	this->turn = other.turn;
+	this->pawnsCollect = other.pawnsCollect;
+	this->finished = other.isRunning();
+	this->state = IN_PROGRESS;
+}
+
 Gipf::Gipf(Gipf&& other) : manager(*this), solver(*this),
 black(other.black.getPawnsAmount(), other.black.getMaxPawns(), other.black.getPawnsSymbol()),
 white(other.white.getPawnsAmount(), other.white.getMaxPawns(), other.white.getPawnsSymbol()) {
@@ -53,7 +82,7 @@ Gipf::Gipf() : black(NULL, NULL, NULL), white(NULL, NULL, NULL), manager(*this),
 	running = false;
 }
 
-void Gipf::operator=(Gipf& new_gipf) {
+Gipf Gipf::operator=(Gipf& new_gipf) {
 	this->board = new_gipf.board;
 	this->size = new_gipf.size;
 	this->running = new_gipf.running;
@@ -61,9 +90,10 @@ void Gipf::operator=(Gipf& new_gipf) {
 	this->pawnsCollect = new_gipf.pawnsCollect;
 	this->white = new_gipf.white;
 	this->black = new_gipf.black;
+	return *this;
 }
 
-void Gipf::operator=(Gipf&& other) {
+Gipf Gipf::operator=(Gipf&& other) {
 	std::swap(this->board, other.board);
 	this->size = other.size;
 	this->running = other.running;
@@ -71,6 +101,15 @@ void Gipf::operator=(Gipf&& other) {
 	this->pawnsCollect = other.pawnsCollect;
 	this->white = other.white;
 	this->black = other.black;
+	return *this;
+}
+
+bool Gipf::operator==(const Gipf& other) {
+	if (vectorsEqual(board, other.board) && white.getPawnsAmount() == other.white.getPawnsAmount() &&
+		black.getPawnsAmount() == other.black.getPawnsAmount()) {
+		return true;
+	}
+	return false;
 }
 
 std::pair<int, int> Gipf::countChainsOnBoard() {
@@ -142,7 +181,7 @@ void Gipf::executeCommand(int command) {
 
 			break;
 		case GEN_ALL_POS_MOV_NUM:
-
+			printUniqueMovesNumber();
 			break;
 		case GEN_ALL_POS_MOV_EXT_NUM:
 
@@ -161,6 +200,10 @@ void Gipf::executeCommand(int command) {
 
 void Gipf::printPossibleMoves() {
 	solver.printAllPossibilities();
+}
+
+void Gipf::printUniqueMovesNumber() {
+	solver.printUniqueMovesNumber();
 }
 
 void Gipf::printGameState() {
@@ -478,14 +521,32 @@ void Gipf::doMove() {
 		}
 	}
 
+
 	putPawn(x, y);
 
 	if (!end.empty() && !manager.chainCommandValid(chainTurn, start, end)) {
 		std::swap(board, boardCopy);
+		currentPlayer()->returnPawn();
 		return;
 	}
 
-	deletePossibleChains(x, y, pushVector, movedLine, start, end);
+	if (!end.empty()) {
+		manager.checkChains(pushVector, start, end);
+	}
+	else {
+		set<Chain> chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
+		char chainSymbol = NONE;
+
+		switch (chains.size()) {
+		case 0:
+			break;
+		default:
+			for (const auto& chain : chains) {
+				manager.deleteChain(chain.start, chain.end, board[chain.start.first][chain.start.second]);
+			}
+			break;
+		}
+	}
 
 	std::cout << "MOVE_COMMITTED\n";
 	badMove.first = false;
@@ -705,7 +766,7 @@ int Gipf::translateCommand(std::string command) {
 	else if (command == "GEN_ALL_POS_MOV_EXT") {
 		return GEN_ALL_POS_MOV_EXT;
 	}
-	else if (command == "GEN_ALL_POS_MOV_NUM") {
+	else if (command == "GEN_ALL_POS_MOV_NUM" || "gennum") {
 		return GEN_ALL_POS_MOV_NUM;
 	}
 	else if (command == "GEN_ALL_POS_MOV_EXT_NUM") {
@@ -722,7 +783,7 @@ int Gipf::translateCommand(std::string command) {
 	}
 }
 
-vector<vector<char>> Gipf::getBoard() {
+vector<vector<char>> Gipf::getBoard() const {
 	return board;
 }
 
@@ -736,6 +797,10 @@ GipfPlayer* Gipf::currentPlayer() {
 
 int Gipf::getPawnsCollect() {
 	return pawnsCollect;
+}
+
+GipfPointsManager* Gipf::getManager() {
+	return &manager;
 }
 
 std::pair<std::string, int> Gipf::separateIndex(std::string& index) {

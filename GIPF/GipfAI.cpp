@@ -1,6 +1,7 @@
 #include "GipfAI.h"
 #include "Gipf.h"
-using std::pair;
+#include <algorithm>
+
 
 GipfAI::GipfAI(Gipf& game) : game(&game) {}
 
@@ -11,22 +12,31 @@ void GipfAI::printAllPossibilities() {
 		games[i].print();
 	}
 }
+ 
+ 
+void GipfAI::printUniqueMovesNumber() {
+	auto games = getAllPossibilities();
+
+	std::cout << games.size() << " UNIQUE_MOVES\n";
+}
 
 vector<Gipf> GipfAI::getAllPossibilities() {
 
-	vector<pair<pair<int, int>, pair<int, int>>> allMoves = getAllPossibleMoveCommands();
+	vector<Chain> allMoves = getAllPossibleMoveCommands();
 	vector<Gipf> games;
 
 	for (int i = 0; i < allMoves.size(); i++) {
 
 		// moving generated game to the vector
-		games.push_back(std::move(makeMove(allMoves[i].first, allMoves[i].second)));
+		games.push_back(std::move(makeMove(allMoves[i].start, allMoves[i].end)));
 
 		// if returned null game cuz of an bad move
 		if (!games.back().isRunning()) {
 			games.pop_back();
 		}
 	}
+
+	deleteDuplicates(games);
 
 	return games;
 }
@@ -35,7 +45,6 @@ vector<Gipf> GipfAI::getAllPossibilities() {
 // check for situations where two chains are possible to destroy
 // but idk how yet
 Gipf GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field) {
-	static Gipf nullGame;
 	Gipf fakeGame(*game);
 	std::pair<int, int> pushVector = fakeGame.getPushVector(pushSource, field);
 	auto board = fakeGame.getBoard();
@@ -57,92 +66,112 @@ Gipf GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field) {
 	}
 
 	fakeGame.putPawn(x, y);
-	fakeGame.deletePossibleChains(x, y, pushVector, movedLine, start, end);
+
+	set<Chain> chains = std::move(fakeGame.getManager()->checkChains(x, y, pushVector, movedLine));
+	char chainSymbol = NONE;
+
+	switch (chains.size()) {
+	case 0:
+		break;
+	default:
+		for (const auto& chain : chains) {
+			fakeGame.getManager()->deleteChain(chain.start, chain.end, board[chain.start.first][chain.start.second]);
+		}
+		break;
+	}
+
 	fakeGame.setTurnCorrect();
 	fakeGame.endTurn();
 
 	return fakeGame;
 }
 
+ 
 // dont question this
 // generate all possible move indexes/commands
 // currently with duplicates
-vector<pair<pair<int, int>, pair<int, int>>> GipfAI::getAllPossibleMoveCommands() {
+// STOS IS THROWING ERROR BECAUSE OF EMPLACE_BACK/PUSH_BACK????????
+vector<Chain> GipfAI::getAllPossibleMoveCommands() {
 	auto board = game->getBoard();
 	int size = board.size() / 2 + 1;
 	int moves = 6 + (size - 1) * 2 * 6;
-	vector <pair<pair<int, int>, pair<int, int>>> allMoves;
+	vector<Chain> allMoves;
 
 	// add left top corner
-	allMoves.push_back({ { -1,-1 }, { 0,0 } });
+	// STOS error?????
+	//allMoves.emplace_back(Chain(- 1, -1, 0, 0));
 
-	int boardCol, boardRow;
-	int pushCol, pushRow;
+	//int boardCol, boardRow;
+	//int pushCol, pushRow;
 
-	pushRow = -1;
-	boardRow = 0;
+	//pushRow = -1;
+	//boardRow = 0;
 
-	// add moves from left top to right top
-	for (int col = 0; col < size - 1; col++) {
-		allMoves.push_back({ {col, pushRow}, {col, boardRow} });
-		allMoves.push_back({ {col, pushRow}, {col + 1, boardRow} });
-	}
+	//// add moves from left top to right top
+	//for (int col = 0; col < size - 1; col++) {
+	//	allMoves.emplace_back(std::pair<int, int>(col, pushRow), std::pair<int, int>(col, boardRow));
+	//	allMoves.emplace_back(std::pair<int, int>(col, pushRow), std::pair<int, int>(col + 1, boardRow));
+	//}
 
-	allMoves.push_back({ { size - 1, pushRow }, { size - 1, boardRow } });
+	//allMoves.emplace_back(std::pair<int, int>(size - 1, pushRow), std::pair<int, int>(size - 1, boardRow));
 
-	// add moves from left top to left
-	pushCol = -1;
-	boardCol = 0;
-	for (int row = 0; row < size - 1; row++) {
-		allMoves.push_back({ {pushCol, row}, {boardCol, row} });
-		allMoves.push_back({ {pushCol, row}, {boardCol, row + 1} });
-	}
+	//// add moves from left top to left
+	//pushCol = -1;
+	//boardCol = 0;
+	//for (int row = 0; row < size - 1; row++) {
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, row), std::pair<int, int>(boardCol, row));
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, row), std::pair<int, int>(boardCol, row + 1));
+	//}
 
-	allMoves.push_back({ { pushCol, size - 1}, { boardCol, size - 1 } });
+	//allMoves.emplace_back(std::pair<int, int>(pushCol, size - 1), std::pair<int, int>(boardCol, size - 1));
 
-	pushCol = 0;
-	pushRow = size;
-	boardCol = 0;
-	boardRow = size - 1;
+	//pushCol = 0;
+	//pushRow = size;
+	//boardCol = 0;
+	//boardRow = size - 1;
 
-	// add moves from left to left bottom
-	for (int i = 0; i < size - 1; i++) {
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol + 1, boardRow + 1} });
-		pushCol++, pushRow++, boardCol++, boardRow++;
-	}
+	//// add moves from left to left bottom
+	//for (int i = 0; i < size - 1; i++) {
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol + 1, boardRow + 1));
+	//	pushCol++, pushRow++, boardCol++, boardRow++;
+	//}
 
-	allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-	pushCol++, boardCol++;
+	//allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//pushCol++, boardCol++;
 
-	// add moves from left bottom to right bottom
-	for (int i = 0; i < size - 1; i++) {
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol - 1, boardRow} });
-		pushCol++, boardCol++;
-	}
+	//// add moves from left bottom to right bottom
+	//for (int i = 0; i < size - 1; i++) {
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol - 1, boardRow));
+	//	pushCol++, boardCol++;
+	//}
 
-	boardCol--;
-	allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-	pushRow--;
+	//boardCol--;
+	//allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//pushRow--;
 
-	// add moves from right bottom to right
-	for (int i = 0; i < size - 1; i++) {
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow - 1} });
-		pushRow--, boardRow--;
-	}
+	//// add moves from right bottom to right
+	//for (int i = 0; i < size - 1; i++) {
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow - 1));
+	//	pushRow--, boardRow--;
+	//}
 
-	allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-	pushCol--, pushRow--;
+	//allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//pushCol--, pushRow--;
 
-	// add moves from right to top right
-	for (int i = 0; i < size - 1; i++) {
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol, boardRow} });
-		allMoves.push_back({ {pushCol, pushRow}, {boardCol - 1, boardRow - 1} });
-		pushCol--, pushRow--, boardCol--, boardRow--;
-	}
+	//// add moves from right to top right
+	//for (int i = 0; i < size - 1; i++) {
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol, boardRow));
+	//	allMoves.emplace_back(std::pair<int, int>(pushCol, pushRow), std::pair<int, int>(boardCol - 1, boardRow - 1));
+	//	pushCol--, pushRow--, boardCol--, boardRow--;
+	//}
 
 	return allMoves;
+}
+
+void GipfAI::deleteDuplicates(vector<Gipf>& games) {
+	games.erase(std::unique(games.begin(), games.end()), games.end());
 }
 

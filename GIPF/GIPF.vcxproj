@@ -134,6 +134,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Chain.h" />
     <ClInclude Include="Controller.h" />
     <ClInclude Include="Defines.h" />
     <ClInclude Include="Gipf.h" />

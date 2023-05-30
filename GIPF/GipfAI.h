@@ -1,6 +1,7 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include "Chain.h"
 using std::vector;
 using std::pair;
 
@@ -14,9 +15,14 @@ public:
 	GipfAI(Gipf& game);
 
 	void printAllPossibilities();
+	void printUniqueMovesNumber();
+
 	vector<Gipf> getAllPossibilities();
 	Gipf makeMove(pair<int, int>& pushSource, pair<int, int>& field);
 
-	vector<pair<pair<int, int>, pair<int, int>>> getAllPossibleMoveCommands();
+	// here is stos error
+	vector<Chain> getAllPossibleMoveCommands();
+	
+	static void deleteDuplicates(vector<Gipf>& games);
 };
 

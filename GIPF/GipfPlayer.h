@@ -25,7 +25,7 @@ public:
 		this->symbol = other.symbol;
 	}
 
-	int getUsedPawns() {
+	int getUsedPawns() const {
 		return maxPawns - pawnsAmount;
 	}
 
@@ -36,15 +36,15 @@ public:
 		return false;
 	}
 
-	int getMaxPawns() {
+	int getMaxPawns() const {
 		return maxPawns;
 	}
 
-	char getPawnsSymbol() {
+	char getPawnsSymbol() const {
 		return symbol;
 	}
 
-	int getPawnsAmount() {
+	int getPawnsAmount() const {
 		return pawnsAmount;
 	}
 

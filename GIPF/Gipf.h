@@ -3,6 +3,7 @@
 #include <iostream>
 #include <memory>
 #include <vector>
+#include <functional>
 #include "Defines.h"
 #include "GipfPlayer.h"
 #include "GipfPointsManager.h"
@@ -34,24 +35,29 @@ public:
 		int whitePawns, int blackPawns, int turn);
 	Gipf operator=(Gipf& new_gipf);
 	Gipf operator=(Gipf&& new_gipf);
+	bool operator<(const Gipf& other) const;
 	bool operator==(const Gipf& other);
+	bool operator==(const Gipf& other) const;
 	Gipf(Gipf& other);
 	Gipf(Gipf&& other);
 	Gipf(const Gipf& other);
 	Gipf();
 
 	std::pair<int, int> countChainsOnBoard();
+	bool errorGame();
 
-	void print() override;
+	void print() const override;
 	void executeCommand(int command) override;
 	int translateCommand(std::string command) override;
 	vector<vector<char>> getBoard() const;
 
-	char currentColor();
+	char currentColor() const;
 	GipfPlayer* currentPlayer();
 
 	int getPawnsCollect();
 	GipfPointsManager* getManager();
+
+	char getColor(pair<int, int> slot);
 
 	static vector<vector<char>> createBoard(int size);
 
@@ -74,7 +80,7 @@ public:
 
 	std::pair<int, int> getCoordinates(std::string& index);
 	std::pair<int, int> getPushVector(std::string& pushSource, std::string& field);
-	std::pair<int, int> getPushVector(std::pair<int, int>& start, std::pair<int, int>& end);
+	std::pair<int, int> getPushVector(std::pair<int, int> start, std::pair<int, int> end);
 
 	int moveValid(std::string& source, std::string& field);
 	int checkIfWrongIndex(std::pair<int, int>& source_p, std::pair<int, int>& field_p);
@@ -106,4 +112,26 @@ public:
 	// solver
 	void printPossibleMoves();
 	void printUniqueMovesNumber();
+
+	vector<vector<Chain>> getIntersectingChains(set<Chain>& chains);
+
+
+	void clearIntersectionTable(vector<vector<bool>>& table, const Chain& baseChain);
+	void fillIntersectionTable(vector<vector<bool>>& table, const Chain& chains);
+	bool checkIfChainIntersect(vector<vector<bool>>& table, const Chain& checkedChain);
 };
+
+namespace std {
+	template <>
+	struct hash<Gipf> {
+		size_t operator()(const Gipf& gipf) const {
+			size_t seed = 0;
+			for (const auto& row : gipf.getBoard()) {
+				for (const auto& value : row) {
+					seed ^= hash<char>{}(value)+0x9e3779b9 + (seed << 6) + (seed >> 2);
+				}
+			}
+			return seed;
+		}
+	};
+}

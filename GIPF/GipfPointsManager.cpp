@@ -12,6 +12,7 @@ GipfPointsManager::GipfPointsManager(Gipf& game) {
 set<Chain> GipfPointsManager::checkChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine) {
 
 	set<Chain> chains;
+	int chainCount = 0;
 
 	if (movedLine) {
 		auto foundChains = std::move(checkMovedLine(x, y, pushVector));
@@ -23,14 +24,17 @@ set<Chain> GipfPointsManager::checkChains(int x, int y, std::pair<int, int>& pus
 		Chain chain;
 		chain = std::move(checkVertically(x, y));
 		if (!chain.empty()) {
+			chainCount++;
 			chains.insert(std::move(chain));
 		}
 		chain = std::move(checkHorizontally(x, y));
 		if (!chain.empty()) {
+			chainCount++;
 			chains.insert(std::move(chain));
 		}
 		chain = std::move(checkDiagonally(x, y));
 		if (!chain.empty()) {
+			chainCount++;
 			chains.insert(std::move(chain));
 		}
 	}
@@ -66,7 +70,7 @@ Chain GipfPointsManager::checkVertically(int col, int row) {
 		return Chain();
 	}
 
-	return Chain(start, end);
+	return Chain(start, end, game->getColor(start));
 
 	/*if (length >= game->getPawnsCollect()) {
 		deleteChain(start, end, color);
@@ -90,7 +94,7 @@ Chain GipfPointsManager::checkHorizontally(int col, int row) {
 		return Chain();
 	}
 
-	return Chain(start, end);
+	return Chain(start, end, game->getColor(start));
 
 	/*if (length >= game->getPawnsCollect()) {
 		deleteChain(start, end, color);
@@ -114,7 +118,7 @@ Chain GipfPointsManager::checkDiagonally(int col, int row) {
 		return Chain();
 	}
 
-	return Chain(start, end);
+	return Chain(start, end, game->getColor(start));
 
 	/*if (length >= game->getPawnsCollect()) {
 		deleteChain(start, end, color);
@@ -125,20 +129,22 @@ set<Chain> GipfPointsManager::checkMovedLine(int col, int row, std::pair<int, in
 
 	vector<vector<char>>& board = game->board;
 	set<Chain> chains;
-	Chain chain;
+	Chain chainVer;
+	Chain chainDiag;
+	Chain chainHor;
 
 	while (Gipf::insideBoard(board, col, row) && board[col][row] != EMPTYCELL) {
-		chain = std::move(checkVertically(col, row));
-		if (!chain.empty()) {
-			chains.insert(std::move(chain));
+		chainVer = std::move(checkVertically(col, row));
+		if (!chainVer.empty()) {
+			chains.insert(std::move(chainVer));
 		}
-		chain = std::move(checkHorizontally(col, row));
-		if (!chain.empty()) {
-			chains.insert(std::move(chain));
+		chainHor = std::move(checkHorizontally(col, row));
+		if (!chainHor.empty()) {
+			chains.insert(std::move(chainHor));
 		}
-		chain = std::move(checkDiagonally(col, row));
-		if (!chain.empty()) {
-			chains.insert(std::move(chain));
+		chainDiag = std::move(checkDiagonally(col, row));
+		if (!chainDiag.empty()) {
+			chains.insert(std::move(chainDiag));
 		}
 		col += pushVector.first;
 		row += pushVector.second;

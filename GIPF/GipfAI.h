@@ -1,11 +1,14 @@
 #pragma once
 #include <iostream>
 #include <vector>
+#include <unordered_set>
 #include "Chain.h"
 using std::vector;
 using std::pair;
+using std::unordered_set;
 
 class Gipf;
+struct Move;
 
 class GipfAI {
 private:
@@ -17,11 +20,11 @@ public:
 	void printAllPossibilities();
 	void printUniqueMovesNumber();
 
-	vector<Gipf> getAllPossibilities();
+	unordered_set<Gipf> getAllPossibilities();
 	Gipf makeMove(pair<int, int>& pushSource, pair<int, int>& field);
 
 	// here is stos error
-	vector<Chain> getAllPossibleMoveCommands();
+	vector<Move> getAllPossibleMoveCommands();
 	
 	static void deleteDuplicates(vector<Gipf>& games);
 };

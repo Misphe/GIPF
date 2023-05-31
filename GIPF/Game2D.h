@@ -8,7 +8,7 @@ protected:
 	bool finished;
 
 public:
-	virtual void print() = 0;
+	virtual void print() const = 0;
 	bool isRunning() const {
 		return running;
 	}

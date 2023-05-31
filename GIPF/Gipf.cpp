@@ -104,12 +104,25 @@ Gipf Gipf::operator=(Gipf&& other) {
 	return *this;
 }
 
+bool Gipf::operator<(const Gipf& other) const {
+	for (int i = 0; i < board.size(); i++) {
+		if (board[i] != other.board[i]) {
+			return false;
+		}
+	}
+	return true;
+}
+
 bool Gipf::operator==(const Gipf& other) {
 	if (vectorsEqual(board, other.board) && white.getPawnsAmount() == other.white.getPawnsAmount() &&
 		black.getPawnsAmount() == other.black.getPawnsAmount()) {
 		return true;
 	}
 	return false;
+}
+
+bool Gipf::operator==(const Gipf& other) const {
+	return board == other.board;
 }
 
 std::pair<int, int> Gipf::countChainsOnBoard() {
@@ -129,7 +142,11 @@ std::pair<int, int> Gipf::countChainsOnBoard() {
 	return std::pair<int, int>(sum.first, sum.second);
 }
 
-void Gipf::print() {
+bool Gipf::errorGame() {
+	return board.size() == 0;
+}
+
+void Gipf::print() const {
 
 	if (boardEmpty) {
 		std::cout << "EMPTY_BOARD\n";
@@ -204,6 +221,108 @@ void Gipf::printPossibleMoves() {
 
 void Gipf::printUniqueMovesNumber() {
 	solver.printUniqueMovesNumber();
+}
+
+vector<vector<Chain>> Gipf::getIntersectingChains(set<Chain>& chains) {
+	if (chains.size() < 2) {
+		return vector<vector<Chain>>();
+	}
+
+	// mark which chains are intersecting and remove them from chains set
+	set<Chain> markedChains;
+
+	vector<vector<Chain>> intersectingChains;
+	vector<vector<bool>> table(board.size(), std::vector<bool>(board.size(), false));
+
+	// control vector indexes
+	int index = 0;
+	int intersectionInIndex = 0;
+
+	for (auto it = chains.begin(); it != chains.end(); ++it) {
+		auto& baseChain = *it;
+
+		fillIntersectionTable(table, baseChain);
+
+
+		for (auto it2 = it; it2 != chains.end(); ++it2) {
+			auto& checkedChain = *it2;
+
+			if (checkedChain == baseChain) {
+				continue;
+			}
+
+			bool intersect = checkIfChainIntersect(table, checkedChain);
+			if (intersect) {
+				if (markedChains.count(checkedChain) > 0) {
+					continue;
+				}
+
+				if (intersectionInIndex == 0) {
+					intersectingChains.push_back(vector<Chain>());
+					intersectingChains[index].push_back(baseChain);
+					markedChains.insert(baseChain);
+				}
+				intersectingChains[index].push_back(checkedChain);
+				markedChains.insert(checkedChain);
+				intersectionInIndex++;
+			}
+
+		}
+
+		intersectionInIndex = 0;
+		index++;
+
+		clearIntersectionTable(table, baseChain);
+	}
+
+	for (const auto& chain : markedChains) {
+		chains.erase(chain);
+	}
+
+	return intersectingChains;
+}
+
+void Gipf::clearIntersectionTable(vector<vector<bool>>& table, const Chain& baseChain) {
+	pair<int, int> push = getPushVector(baseChain.start, baseChain.end);
+	pair<int, int> current = baseChain.start;
+
+	while (current != baseChain.end) {
+		table[current.first][current.second] = false;
+		current.first += push.first;
+		current.second += push.second;
+	}
+	table[current.first][current.second] = false;
+}
+
+void Gipf::fillIntersectionTable(vector<vector<bool>>& table, const Chain& baseChain) {
+	pair<int, int> push = getPushVector(baseChain.start, baseChain.end);
+	pair<int, int> current = baseChain.start;
+
+	while (current != baseChain.end) {
+		table[current.first][current.second] = true;
+		current.first += push.first;
+		current.second += push.second;
+	}
+	table[current.first][current.second] = true;
+}
+
+bool Gipf::checkIfChainIntersect(vector<vector<bool>>& table, const Chain& checkedChain) {
+	pair<int, int> current = checkedChain.start;
+	pair<int, int> push = getPushVector(checkedChain.start, checkedChain.end);
+
+	while (current != checkedChain.end) {
+		if (table[current.first][current.second] == true) {
+			return true;
+		}
+
+		current.first += push.first;
+		current.second += push.second;
+	}
+	if (table[current.first][current.second] == true) {
+		return true;
+	}
+
+	return false;
 }
 
 void Gipf::printGameState() {
@@ -489,11 +608,13 @@ void Gipf::setBadMoveState(std::string& pushSource, std::string& field) {
 }
 
 void Gipf::doMove() {
+
 	std::string pushSource, field;
 	std::string move, start, end;
 	char chainTurn;
+	cin >> move;
 
-	getMove(move, chainTurn, start, end);
+	//getMove(move, chainTurn, start, end);
 	loadMoveSegments(move, pushSource, field);
 
 	std::pair<int, int> coords = getCoordinates(field);
@@ -521,32 +642,78 @@ void Gipf::doMove() {
 		}
 	}
 
-
 	putPawn(x, y);
 
-	if (!end.empty() && !manager.chainCommandValid(chainTurn, start, end)) {
+	/*if (!end.empty() && !manager.chainCommandValid(chainTurn, start, end)) {
 		std::swap(board, boardCopy);
 		currentPlayer()->returnPawn();
 		return;
-	}
+	}*/
 
-	if (!end.empty()) {
-		manager.checkChains(pushVector, start, end);
+	/*set<Chain> chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
+	if (chains.empty()) {
+		
 	}
-	else {
-		set<Chain> chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
-		char chainSymbol = NONE;
+	vector<vector<Chain>> intersectingChains = getIntersectingChains(chains);*/
 
-		switch (chains.size()) {
-		case 0:
-			break;
-		default:
-			for (const auto& chain : chains) {
+	set<Chain> chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
+	vector<vector<Chain>> intersectingChains = getIntersectingChains(chains);
+
+	char chainSymbol = NONE;
+
+	switch (chains.size()) {
+	case 0:
+		break;
+	default:
+		for (const auto& chain : chains) {
+			if (board[chain.start.first][chain.start.second] != EMPTYCELL) {
 				manager.deleteChain(chain.start, chain.end, board[chain.start.first][chain.start.second]);
 			}
-			break;
+		}
+		break;
+	}
+
+	for (int i = 0; i < intersectingChains.size(); i++) {
+		cin >> chainTurn >> start >> start >> end;
+		chainTurn = chainTurn == 'w' ? WHITEPAWN : BLACKPAWN;
+		std::pair<int, int> startOfChain = getCoordinates(start);
+		std::pair<int, int> endOfChain = getCoordinates(end);
+		bool found = false;
+		for (auto& intersection : intersectingChains) {
+			for (auto& checkedChain : intersection) {
+				if ((checkedChain.start == startOfChain && checkedChain.end == endOfChain) ||
+					checkedChain.start == endOfChain && checkedChain.end == startOfChain) {
+					found = true;
+
+					if (chainTurn != getColor(startOfChain)) {
+						std::cout << "WRONG_COLOR_OF_CHOSEN_ROW\n";
+						std::swap(board, boardCopy);
+						currentPlayer()->returnPawn();
+						badMove.first = true;
+						return;
+					}
+					else {
+						manager.deleteChain(startOfChain, endOfChain, chainTurn);
+						break;
+					}
+				}
+			}
+		}
+
+		if (!found) {
+			std::cout << "WRONG_INDEX_OF_CHOSEN_ROW\n";
+			std::swap(board, boardCopy);
+			currentPlayer()->returnPawn();
+			badMove.first = true;
+			return;
 		}
 	}
+
+	/*if (!end.empty()) {
+		std::pair<int, int> startOfChain = getCoordinates(start);
+		std::pair<int, int> endOfChain = getCoordinates(end);
+		manager.deleteChain(startOfChain, endOfChain, board[startOfChain.first][startOfChain.second]);
+	}*/
 
 	std::cout << "MOVE_COMMITTED\n";
 	badMove.first = false;
@@ -766,7 +933,7 @@ int Gipf::translateCommand(std::string command) {
 	else if (command == "GEN_ALL_POS_MOV_EXT") {
 		return GEN_ALL_POS_MOV_EXT;
 	}
-	else if (command == "GEN_ALL_POS_MOV_NUM" || "gennum") {
+	else if (command == "GEN_ALL_POS_MOV_NUM" || command == "gennum") {
 		return GEN_ALL_POS_MOV_NUM;
 	}
 	else if (command == "GEN_ALL_POS_MOV_EXT_NUM") {
@@ -787,7 +954,7 @@ vector<vector<char>> Gipf::getBoard() const {
 	return board;
 }
 
-char Gipf::currentColor() {
+char Gipf::currentColor() const {
 	return turn == WHITETURN ? WHITEPAWN : BLACKPAWN;
 }
 
@@ -801,6 +968,10 @@ int Gipf::getPawnsCollect() {
 
 GipfPointsManager* Gipf::getManager() {
 	return &manager;
+}
+
+char Gipf::getColor(pair<int, int> slot) {
+	return board[slot.first][slot.second];
 }
 
 std::pair<std::string, int> Gipf::separateIndex(std::string& index) {
@@ -893,7 +1064,7 @@ std::pair<int, int> Gipf::getPushVector(std::string& pushSource, std::string& fi
 	return std::pair<int, int>(dx, dy);
 }
 
-std::pair<int, int> Gipf::getPushVector(std::pair<int, int>& start, std::pair<int, int>& end) {
+std::pair<int, int> Gipf::getPushVector(const std::pair<int, int> start, const std::pair<int, int> end) {
 	std::pair<int, int> direction(NONE, NONE);
 
 	if (start.first == end.first) {

@@ -23,7 +23,7 @@ void GipfAI::printAllPossibilities() {
 void GipfAI::printUniqueMovesNumber() {
 	auto games = getAllPossibilities();
 
-	std::cout << games.size() << " UNIQUE_MOVES\n";
+	std::cout << games.size() << "_UNIQUE_MOVES\n";
 }
 
 unordered_set<Gipf> GipfAI::getAllPossibilities() {

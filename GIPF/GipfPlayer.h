@@ -19,10 +19,11 @@ public:
 		this->maxPawns = set_maxPawns;
 	}
 
-	void operator=(GipfPlayer& other) {
+	GipfPlayer& operator=(const GipfPlayer& other) {
 		this->pawnsAmount = other.pawnsAmount;
 		this->maxPawns = other.maxPawns;
 		this->symbol = other.symbol;
+		return *this;
 	}
 
 	int getUsedPawns() const {

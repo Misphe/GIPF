@@ -10,13 +10,18 @@ std::string Controller::getCommand() {
         return command;
     }
     else if (std::cin.eof()) {
-        exit(0);
+        return "end";
     }
     return command;
 }
 
 void Controller::passCommand() {
     std::string raw_command = getCommand();
+    if (raw_command == "end") {
+        game->end();
+        return;
+    }
+
     int command = game->translateCommand(raw_command);
     game->executeCommand(command);
 }

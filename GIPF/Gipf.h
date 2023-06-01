@@ -1,7 +1,6 @@
 #pragma once
 #include "Game2D.h"
 #include <iostream>
-#include <memory>
 #include <vector>
 #include <functional>
 #include "Defines.h"
@@ -11,6 +10,7 @@
 
 using std::unique_ptr;
 using std::vector;
+using std::pair;
 
 class Gipf : public Game2D {
 private:
@@ -33,8 +33,8 @@ private:
 public:
 	Gipf(vector<vector<char>> board, int size, int pawnsCollect, int whiteMaxPawns, int blackMaxPawns,
 		int whitePawns, int blackPawns, int turn);
-	Gipf operator=(Gipf& new_gipf);
-	Gipf operator=(Gipf&& new_gipf);
+	Gipf& operator=(const Gipf& new_gipf);
+	Gipf& operator=(Gipf&& new_gipf);
 	bool operator<(const Gipf& other) const;
 	bool operator==(const Gipf& other);
 	bool operator==(const Gipf& other) const;
@@ -119,6 +119,9 @@ public:
 	void clearIntersectionTable(vector<vector<bool>>& table, const Chain& baseChain);
 	void fillIntersectionTable(vector<vector<bool>>& table, const Chain& chains);
 	bool checkIfChainIntersect(vector<vector<bool>>& table, const Chain& checkedChain);
+
+
+	~Gipf();
 };
 
 namespace std {

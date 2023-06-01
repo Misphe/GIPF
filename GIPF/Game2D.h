@@ -1,6 +1,5 @@
 #pragma once
 #include <string>
-#include <vector>
 
 class Game2D {
 protected:
@@ -15,4 +14,9 @@ public:
 
 	virtual int translateCommand(std::string command) = 0;
 	virtual void executeCommand(int command) = 0;
+	void end() {
+		running = false;
+	}
+
+	virtual ~Game2D() {}
 };

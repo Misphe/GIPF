@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 
+using std::pair;
+
 template<typename T>
 bool vectorsEqual(const std::vector<T>& v1, const std::vector<T>& v2) {
 	if (v1.size() != v2.size()) {
@@ -82,7 +84,7 @@ Gipf::Gipf() : black(NULL, NULL, NULL), white(NULL, NULL, NULL), manager(*this),
 	running = false;
 }
 
-Gipf Gipf::operator=(Gipf& new_gipf) {
+Gipf& Gipf::operator=(const Gipf& new_gipf) {
 	this->board = new_gipf.board;
 	this->size = new_gipf.size;
 	this->running = new_gipf.running;
@@ -93,7 +95,7 @@ Gipf Gipf::operator=(Gipf& new_gipf) {
 	return *this;
 }
 
-Gipf Gipf::operator=(Gipf&& other) {
+Gipf& Gipf::operator=(Gipf&& other) {
 	std::swap(this->board, other.board);
 	this->size = other.size;
 	this->running = other.running;
@@ -325,6 +327,7 @@ bool Gipf::checkIfChainIntersect(vector<vector<bool>>& table, const Chain& check
 	return false;
 }
 
+
 void Gipf::printGameState() {
 	std::cout << getGameState() << "\n";
 }
@@ -335,7 +338,8 @@ std::string Gipf::getGameState() {
 		currentState =  "BAD_MOVE " + std::string(1, currentColor()) + " " + badMove.second;
 	}
 	else if (isDeadLock()) {
-		currentState = "DEAD_LOCK " + std::string(1, currentColor());
+		//currentState = "DEAD_LOCK " + std::string(1, currentColor());
+		currentState = currentColor() == WHITEPAWN ? BLACKWON : WHITEWON;
 	}
 	else if (white.lost()) {
 		currentState = BLACKWON;
@@ -614,7 +618,6 @@ void Gipf::doMove() {
 	char chainTurn;
 	cin >> move;
 
-	//getMove(move, chainTurn, start, end);
 	loadMoveSegments(move, pushSource, field);
 
 	std::pair<int, int> coords = getCoordinates(field);
@@ -644,35 +647,16 @@ void Gipf::doMove() {
 
 	putPawn(x, y);
 
-	/*if (!end.empty() && !manager.chainCommandValid(chainTurn, start, end)) {
-		std::swap(board, boardCopy);
-		currentPlayer()->returnPawn();
-		return;
-	}*/
-
-	/*set<Chain> chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
-	if (chains.empty()) {
-		
-	}
-	vector<vector<Chain>> intersectingChains = getIntersectingChains(chains);*/
-
 	set<Chain> chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
 	vector<vector<Chain>> intersectingChains = getIntersectingChains(chains);
 
 	char chainSymbol = NONE;
 
-	switch (chains.size()) {
-	case 0:
-		break;
-	default:
-		for (const auto& chain : chains) {
-			if (board[chain.start.first][chain.start.second] != EMPTYCELL) {
-				manager.deleteChain(chain.start, chain.end, board[chain.start.first][chain.start.second]);
-			}
-		}
-		break;
+	if (chains.size() > 0) {
+		manager.deleteChains(chains, intersectingChains, x, y, pushVector, movedLine);
 	}
 
+	// delete intersecting chains based on users input
 	for (int i = 0; i < intersectingChains.size(); i++) {
 		cin >> chainTurn >> start >> start >> end;
 		chainTurn = chainTurn == 'w' ? WHITEPAWN : BLACKPAWN;
@@ -694,6 +678,8 @@ void Gipf::doMove() {
 					}
 					else {
 						manager.deleteChain(startOfChain, endOfChain, chainTurn);
+						chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
+						intersectingChains = getIntersectingChains(chains);
 						break;
 					}
 				}
@@ -708,12 +694,6 @@ void Gipf::doMove() {
 			return;
 		}
 	}
-
-	/*if (!end.empty()) {
-		std::pair<int, int> startOfChain = getCoordinates(start);
-		std::pair<int, int> endOfChain = getCoordinates(end);
-		manager.deleteChain(startOfChain, endOfChain, board[startOfChain.first][startOfChain.second]);
-	}*/
 
 	std::cout << "MOVE_COMMITTED\n";
 	badMove.first = false;
@@ -924,7 +904,7 @@ int Gipf::translateCommand(std::string command) {
 	else if (command == "DO_MOVE") {
 		return DO_MOVE;
 	}
-	else if (command == "PRINT_GAME_STATE") {
+	else if (command == "PRINT_GAME_STATE" || command == "IS_GAME_OVER") {
 		return PRINT_GAME_STATE;
 	}
 	else if (command == "GEN_ALL_POS_MOV" || command == "gen") {
@@ -1307,4 +1287,8 @@ void Gipf::getMove(std::string& move, char& turn, std::string& start, std::strin
 		return;
 	}
 	cin >> end;
+}
+
+Gipf::~Gipf() {
+
 }

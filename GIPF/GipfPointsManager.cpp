@@ -133,7 +133,7 @@ set<Chain> GipfPointsManager::checkMovedLine(int col, int row, std::pair<int, in
 	Chain chainDiag;
 	Chain chainHor;
 
-	while (Gipf::insideBoard(board, col, row) && board[col][row] != EMPTYCELL) {
+	while (Gipf::insideBoard(board, col, row)) {
 		chainVer = std::move(checkVertically(col, row));
 		if (!chainVer.empty()) {
 			chains.insert(std::move(chainVer));
@@ -207,6 +207,16 @@ void GipfPointsManager::deleteChain(const std::pair<int, int>& start, const std:
 	deleteAdjacent(start, pushVectorFirst, symbol);
 	deleteAdjacent(end, direction, symbol);
 	deleteMiddle(start, end, direction, symbol);
+}
+
+void GipfPointsManager::deleteChains(set<Chain>& chains, vector<vector<Chain>>& intersectingChains, int x, int y,
+	std::pair<int, int>& pushVector, bool movedLine) {
+	while (!chains.empty()) {
+		Chain chain = *chains.begin();
+		deleteChain(chain.start, chain.end, chain.color);
+		chains = std::move(checkChains(x, y, pushVector, movedLine));
+		intersectingChains = game->getIntersectingChains(chains);
+	}
 }
 
 void GipfPointsManager::deleteAdjacent(const std::pair<int, int>& start, std::pair<int, int>& dir, char symbol) {

@@ -25,6 +25,8 @@ public:
 
 	std::pair<int, int> findChainEnd(int col, int row, int direction);
 	void deleteChain(const std::pair<int, int>& start, const std::pair<int, int>& end, char symbol);
+	void deleteChains(set<Chain>& chains, vector<vector<Chain>>& intersectingChains, int x, int y,
+		std::pair<int, int>& pushVector, bool movedLine);
 
 	void deleteAdjacent(const std::pair<int, int>& start, std::pair<int, int>& dir, char symbol);
 	void deleteMiddle(const std::pair<int, int>& start, const std::pair<int, int>& end, std::pair<int, int>& dir, char symbol);

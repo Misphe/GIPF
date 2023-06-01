@@ -13,11 +13,6 @@ public:
 		end = { EMPTY,EMPTY };
 		color = EMPTY;
 	}
-	Chain(std::pair<int, int>& start, std::pair<int, int>& end, char set_color) {
-		this->start = start;
-		this->end = end;
-		this->color = set_color;
-	}
 	Chain(const std::pair<int, int>& start, const std::pair<int, int>& end, char set_color) {
 		this->start = start;
 		this->end = end;
@@ -38,11 +33,6 @@ public:
 		this->end = other.end;
 		this->color = other.color;
 	}
-	Chain(Chain& other) {
-		this->start = other.start;
-		this->end = other.end;
-		this->color = other.color;
-	}
 	Chain(int x1, int y1, int x2, int y2, char set_color) {
 		start = std::make_pair(x1, y1);
 		end = std::make_pair(x2, y2);
@@ -51,12 +41,6 @@ public:
 	Chain& operator=(Chain&& other) {
 		this->start = std::move(other.start);
 		this->end = std::move(other.end);
-		this->color = other.color;
-		return *this;
-	}
-	Chain& operator=(Chain& other) {
-		this->start = other.start;
-		this->end = other.end;
 		this->color = other.color;
 		return *this;
 	}
@@ -78,7 +62,18 @@ public:
 		return end < other.end;
 	}
 
+	bool operator<(Chain&& other) const {
+		if (start != other.start) {
+			return start < other.start;
+		}
+		return end < other.end;
+	}
+
 	bool operator==(const Chain& other) const {
+		return start == other.start && end == other.end;
+	}
+
+	bool operator==(Chain&& other) const {
 		return start == other.start && end == other.end;
 	}
 };

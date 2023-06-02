@@ -19,9 +19,12 @@ public:
 
 	void printAllPossibilities();
 	void printUniqueMovesNumber();
+	void printUniqueMovesNumberExt();
+	void printPossibleMovesExt();
 
+	Gipf getWinningMove(unordered_set<Gipf>& games);
 	unordered_set<Gipf> getAllPossibilities();
-	Gipf makeMove(pair<int, int>& pushSource, pair<int, int>& field);
+	vector<Gipf> makeMove(pair<int, int>& pushSource, pair<int, int>& field);
 
 	// here is stos error
 	vector<Move> getAllPossibleMoveCommands();

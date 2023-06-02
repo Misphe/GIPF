@@ -11,11 +11,39 @@ struct Move {
 
 GipfAI::GipfAI(Gipf& game) : game(&game) {}
 
+void GipfAI::printUniqueMovesNumberExt() {
+	auto games = getAllPossibilities();
+	Gipf winning = std::move(getWinningMove(games));
+
+	if (winning.isRunning()) {
+		std::cout << "1_UNIQUE_MOVES\n";
+	}
+
+	else {
+		std::cout << games.size() << "_UNIQUE_MOVES\n";
+	}
+}
+
+void GipfAI::printPossibleMovesExt() {
+	auto games = getAllPossibilities();
+	Gipf winning = std::move(getWinningMove(games));
+
+	if (winning.isRunning()) {
+		winning.print();
+	}
+
+	else {
+		for (auto& game_ : games) {
+			game_.print();
+		}
+	}
+}
+
 void GipfAI::printAllPossibilities() {
 	auto games = getAllPossibilities();
 
-	for (auto& game : games) {
-		game.print();
+	for (auto& game_ : games) {
+		game_.print();
 	}
 }
  
@@ -26,6 +54,16 @@ void GipfAI::printUniqueMovesNumber() {
 	std::cout << games.size() << "_UNIQUE_MOVES\n";
 }
 
+Gipf GipfAI::getWinningMove(unordered_set<Gipf>& games) {
+	for (auto& game_ : games) {
+		const GipfPlayer* player = game_.currentPlayer();
+		if (player->getPawnsAmount() == 0 || game_.isDeadLock()) {
+			return game_;
+		}
+	}
+	return Gipf();
+}
+
 unordered_set<Gipf> GipfAI::getAllPossibilities() {
 
 	vector<Move> allMoves = getAllPossibleMoveCommands();
@@ -34,25 +72,30 @@ unordered_set<Gipf> GipfAI::getAllPossibilities() {
 	for (int i = 0; i < allMoves.size(); i++) {
 
 		// moving generated game to the vector
-		Gipf game = std::move(makeMove(allMoves[i].start, allMoves[i].end));
+		vector<Gipf> game = std::move(makeMove(allMoves[i].start, allMoves[i].end));
 
-		// check if returned null game
-		if (!game.errorGame()) {
-			games.insert(game);
+		// check if error
+		if (game.empty()) {
+			continue;
+		}
+
+		// check if returned any null games
+		for (int j = 0; j < game.size(); j++) {
+
+			if (!game[j].errorGame()) {
+				games.insert(game[j]);
+			}
 		}
 
 	}
 
-	//deleteDuplicates(games);
-
 	return games;
 }
 
-// TODO 
-// check for situations where two chains are possible to destroy
-// but idk how yet
-Gipf GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field) {
+// TODO
+vector<Gipf> GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field) {
 	Gipf fakeGame(*game);
+	vector<Gipf> games;
 	pair<int, int> pushVector = fakeGame.getPushVector(pushSource, field);
 	auto board = fakeGame.getBoard();
 	std::string start, end;
@@ -68,29 +111,41 @@ Gipf GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field) {
 		movedLine = true;
 
 		if (!success) {
-			return Gipf();
+			return vector<Gipf>();
 		}
 	}
 
 	fakeGame.putPawn(x, y);
 
 	set<Chain> chains = std::move(fakeGame.getManager()->checkChains(x, y, pushVector, movedLine));
-	char chainSymbol = NONE;
+	vector<vector<Chain>> intersectingChains = fakeGame.getIntersectingChains(chains);
 
-	switch (chains.size()) {
-	case 0:
-		break;
-	default:
-		for (const auto& chain : chains) {
-			fakeGame.getManager()->deleteChain(chain.start, chain.end, board[chain.start.first][chain.start.second]);
-		}
-		break;
+	if (chains.size() > 0) {
+		fakeGame.getManager()->deleteChains(chains, intersectingChains, x, y, pushVector, movedLine);
 	}
 
-	fakeGame.setTurnCorrect();
-	fakeGame.endTurn();
+	if (intersectingChains.size() == 0) {
+		games.push_back(fakeGame);
+	}
 
-	return fakeGame;
+	for (auto& intersection : intersectingChains) {
+		for (auto& chainInIntersection : intersection) {
+			Gipf fakeGame2(fakeGame);
+			fakeGame2.getManager()->deleteChain(chainInIntersection.start, chainInIntersection.end, chainInIntersection.color);
+
+			/*chains = std::move(fakeGame2.getManager()->checkChains(x, y, pushVector, movedLine));
+			intersectingChains = fakeGame2.getIntersectingChains(chains);*/
+
+			games.push_back(fakeGame2);
+		}
+	}
+
+	for (auto& tmp_game : games) {
+		tmp_game.setTurnCorrect();
+		tmp_game.endTurn();
+	}
+
+	return games;
 }
 
  

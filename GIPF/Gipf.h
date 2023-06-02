@@ -52,6 +52,7 @@ public:
 	vector<vector<char>> getBoard() const;
 
 	char currentColor() const;
+	const GipfPlayer* currentPlayer() const;
 	GipfPlayer* currentPlayer();
 
 	int getPawnsCollect();
@@ -90,13 +91,13 @@ public:
 	void setBadMoveState(std::string& pushSource, std::string& field);
 
 	void printGameState();
-	std::string getGameState();
-	bool madeBadMove();
-	bool isDeadLock();
+	std::string getGameState() const;
+	const bool madeBadMove() const;
+	bool isDeadLock() const;
 	void setTurnCorrect();
 
 	static bool insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> coords);
-	static bool insideBoard(vector<vector<char>>& checkedBoard, int col, int row);
+	static bool insideBoard(const vector<vector<char>>& checkedBoard, int col, int row);
 	int countRowsInColumn(int index);
 	int countRowStart(int index);
 	
@@ -112,6 +113,10 @@ public:
 	// solver
 	void printPossibleMoves();
 	void printUniqueMovesNumber();
+	void printUniqueMovesNumberExt();
+	void printPossibleMovesExt();
+
+
 
 	vector<vector<Chain>> getIntersectingChains(set<Chain>& chains);
 

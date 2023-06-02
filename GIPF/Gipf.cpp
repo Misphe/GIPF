@@ -197,13 +197,13 @@ void Gipf::executeCommand(int command) {
 			printPossibleMoves();
 			break;
 		case GEN_ALL_POS_MOV_EXT:
-
+			printPossibleMovesExt();
 			break;
 		case GEN_ALL_POS_MOV_NUM:
 			printUniqueMovesNumber();
 			break;
 		case GEN_ALL_POS_MOV_EXT_NUM:
-
+			printUniqueMovesNumberExt();
 			break;
 		case WINNING_SEQUENCE_EXIST:
 
@@ -223,6 +223,14 @@ void Gipf::printPossibleMoves() {
 
 void Gipf::printUniqueMovesNumber() {
 	solver.printUniqueMovesNumber();
+}
+
+void Gipf::printUniqueMovesNumberExt() {
+	solver.printUniqueMovesNumberExt();
+}
+
+void Gipf::printPossibleMovesExt() {
+	solver.printPossibleMovesExt();
 }
 
 vector<vector<Chain>> Gipf::getIntersectingChains(set<Chain>& chains) {
@@ -271,8 +279,10 @@ vector<vector<Chain>> Gipf::getIntersectingChains(set<Chain>& chains) {
 
 		}
 
+		if (intersectionInIndex > 0) {
+			index++;
+		}
 		intersectionInIndex = 0;
-		index++;
 
 		clearIntersectionTable(table, baseChain);
 	}
@@ -332,7 +342,7 @@ void Gipf::printGameState() {
 	std::cout << getGameState() << "\n";
 }
 
-std::string Gipf::getGameState() {
+std::string Gipf::getGameState() const {
 	std::string currentState;
 	if (madeBadMove()) {
 		currentState =  "BAD_MOVE " + std::string(1, currentColor()) + " " + badMove.second;
@@ -353,11 +363,11 @@ std::string Gipf::getGameState() {
 	return currentState;
 }
 
-bool Gipf::madeBadMove() {
+const bool Gipf::madeBadMove() const {
 	return badMove.first;
 }
 
-bool Gipf::isDeadLock() {
+bool Gipf::isDeadLock() const {
 	for (int row = 0; row < board.size(); row++) {
 		for(int col = 0; col < board.size(); col++) {
 			if (!insideBoard(board, col, row)) {
@@ -938,6 +948,10 @@ char Gipf::currentColor() const {
 	return turn == WHITETURN ? WHITEPAWN : BLACKPAWN;
 }
 
+const GipfPlayer* Gipf::currentPlayer() const {
+	return turn == WHITE ? &white : &black;
+}
+
 GipfPlayer* Gipf::currentPlayer() {
 	return turn == WHITE ? &white : &black;
 }
@@ -1097,7 +1111,7 @@ bool Gipf::insideBoard(vector<vector<char>>& checkedBoard, std::pair<int, int> c
 	return true;
 }
 
-bool Gipf::insideBoard(vector<vector<char>>& checkedBoard, int col, int row) {
+bool Gipf::insideBoard(const vector<vector<char>>& checkedBoard, int col, int row) {
 	if (col < 0 || col > checkedBoard.size() - 1) {
 		return false;
 	}

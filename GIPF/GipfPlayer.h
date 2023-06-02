@@ -30,7 +30,7 @@ public:
 		return maxPawns - pawnsAmount;
 	}
 
-	bool lost() {
+	bool lost() const {
 		if (pawnsAmount == 0) {
 			return true;
 		}

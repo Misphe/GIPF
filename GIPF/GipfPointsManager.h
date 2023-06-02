@@ -27,6 +27,8 @@ public:
 	void deleteChain(const std::pair<int, int>& start, const std::pair<int, int>& end, char symbol);
 	void deleteChains(set<Chain>& chains, vector<vector<Chain>>& intersectingChains, int x, int y,
 		std::pair<int, int>& pushVector, bool movedLine);
+	void deleteChains(set<Chain>& chains, vector<vector<Chain>>& intersectingChains, int x, int y,
+		std::pair<int, int>& pushVector, bool movedLine, char color);
 
 	void deleteAdjacent(const std::pair<int, int>& start, std::pair<int, int>& dir, char symbol);
 	void deleteMiddle(const std::pair<int, int>& start, const std::pair<int, int>& end, std::pair<int, int>& dir, char symbol);
@@ -35,5 +37,6 @@ public:
 	static int directionToDimension(int direction);
 	std::pair<int, int> getPushVector(std::string& start_s, std::string& end_s);
 	std::pair<int, int> getPushVector(const std::pair<int, int>& start, const std::pair<int, int>& end);
+
 };
 

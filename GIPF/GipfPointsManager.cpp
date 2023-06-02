@@ -219,6 +219,23 @@ void GipfPointsManager::deleteChains(set<Chain>& chains, vector<vector<Chain>>& 
 	}
 }
 
+void GipfPointsManager::deleteChains(set<Chain>& chains, vector<vector<Chain>>& intersectingChains, int x, int y,
+	std::pair<int, int>& pushVector, bool movedLine, char color) {
+	while (!chains.empty()) {
+		auto it = chains.begin();
+		while (it->color != color) {
+			++it;
+			if (it == chains.end()) {
+				return;
+			}
+		}
+		Chain chain = *it;
+		deleteChain(chain.start, chain.end, color);
+		chains = std::move(checkChains(x, y, pushVector, movedLine));
+		intersectingChains = game->getIntersectingChains(chains);
+	}
+}
+
 void GipfPointsManager::deleteAdjacent(const std::pair<int, int>& start, std::pair<int, int>& dir, char symbol) {
 	int col = start.first + dir.first;
 	int row = start.second + dir.second;

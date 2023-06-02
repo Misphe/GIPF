@@ -52,8 +52,10 @@ public:
 	vector<vector<char>> getBoard() const;
 
 	char currentColor() const;
+	char nextColor() const;
 	const GipfPlayer* currentPlayer() const;
 	GipfPlayer* currentPlayer();
+	const GipfPlayer* nextPlayer() const;
 
 	int getPawnsCollect();
 	GipfPointsManager* getManager();
@@ -70,7 +72,11 @@ public:
 
 	void doMove();
 	void deletePossibleChains(int x, int y, std::pair<int, int>& pushVector, bool movedLine, std::string& start, std::string& end);
+	bool stillSomethingToDestroy(vector<vector<Chain>>& intersectingChains, char symbol);
 	
+	bool deleteWrittenIntersections(vector<vector<Chain>>& intersectingChains, set<Chain>& chains,
+		int x, int y, std::pair<int, int>& pushVector, bool movedLine, vector<vector<char>>& boardCopy);
+
 	void printBadMoveReason(int valid, std::string& pushSource, std::string& field);
 
 	static void loadMoveSegments(std::string& move, std::string& start, std::string& dir);
@@ -109,12 +115,16 @@ public:
 		int& totalWhiteRows, int& totalBlackRows, int& mode);
 	
 	static void getMove(std::string& move, char& turn, std::string& start, std::string& end);
+
+	bool chainHasIntersection(const Chain& chain, vector<vector<Chain>>& intersectingChains);
 	
 	// solver
 	void printPossibleMoves();
 	void printUniqueMovesNumber();
 	void printUniqueMovesNumberExt();
 	void printPossibleMovesExt();
+	void printSolvedGameState();
+
 
 
 
@@ -124,7 +134,6 @@ public:
 	void clearIntersectionTable(vector<vector<bool>>& table, const Chain& baseChain);
 	void fillIntersectionTable(vector<vector<bool>>& table, const Chain& chains);
 	bool checkIfChainIntersect(vector<vector<bool>>& table, const Chain& checkedChain);
-
 
 	~Gipf();
 };

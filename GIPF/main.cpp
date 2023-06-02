@@ -11,6 +11,7 @@ using std::vector;
 int main() {
 
 	{
+
 	int size = 4, pawnsCollect = 4;
 	int whiteMaxPawns = 15, blackMaxPawns = 15;
 	int whitePawns = 4, blackPawns = 4;

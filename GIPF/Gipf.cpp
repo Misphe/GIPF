@@ -209,7 +209,7 @@ void Gipf::executeCommand(int command) {
 
 			break;
 		case SOLVE_GAME_STATE:
-
+			printSolvedGameState();
 			break;
 		default:
 
@@ -231,6 +231,12 @@ void Gipf::printUniqueMovesNumberExt() {
 
 void Gipf::printPossibleMovesExt() {
 	solver.printPossibleMovesExt();
+}
+
+void Gipf::printSolvedGameState() {
+	int moves = 1;
+	//cin >> moves;
+	solver.printSolvedGameState(moves);
 }
 
 vector<vector<Chain>> Gipf::getIntersectingChains(set<Chain>& chains) {
@@ -663,44 +669,22 @@ void Gipf::doMove() {
 	char chainSymbol = NONE;
 
 	if (chains.size() > 0) {
-		manager.deleteChains(chains, intersectingChains, x, y, pushVector, movedLine);
+		manager.deleteChains(chains, intersectingChains, x, y, pushVector, movedLine, currentColor());
 	}
 
 	// delete intersecting chains based on users input
-	for (int i = 0; i < intersectingChains.size(); i++) {
-		cin >> chainTurn >> start >> start >> end;
-		chainTurn = chainTurn == 'w' ? WHITEPAWN : BLACKPAWN;
-		std::pair<int, int> startOfChain = getCoordinates(start);
-		std::pair<int, int> endOfChain = getCoordinates(end);
-		bool found = false;
-		for (auto& intersection : intersectingChains) {
-			for (auto& checkedChain : intersection) {
-				if ((checkedChain.start == startOfChain && checkedChain.end == endOfChain) ||
-					checkedChain.start == endOfChain && checkedChain.end == startOfChain) {
-					found = true;
-
-					if (chainTurn != getColor(startOfChain)) {
-						std::cout << "WRONG_COLOR_OF_CHOSEN_ROW\n";
-						std::swap(board, boardCopy);
-						currentPlayer()->returnPawn();
-						badMove.first = true;
-						return;
-					}
-					else {
-						manager.deleteChain(startOfChain, endOfChain, chainTurn);
-						chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
-						intersectingChains = getIntersectingChains(chains);
-						break;
-					}
-				}
-			}
+	while (stillSomethingToDestroy(intersectingChains, currentColor())) {
+		if (deleteWrittenIntersections(intersectingChains, chains, x, y, pushVector, movedLine, boardCopy) == false) {
+			return;
 		}
+	}
 
-		if (!found) {
-			std::cout << "WRONG_INDEX_OF_CHOSEN_ROW\n";
-			std::swap(board, boardCopy);
-			currentPlayer()->returnPawn();
-			badMove.first = true;
+	if (chains.size() > 0) {
+		manager.deleteChains(chains, intersectingChains, x, y, pushVector, movedLine);
+	}
+
+	while (stillSomethingToDestroy(intersectingChains, nextColor())) {
+		if (deleteWrittenIntersections(intersectingChains, chains, x, y, pushVector, movedLine, boardCopy) == false) {
 			return;
 		}
 	}
@@ -708,6 +692,62 @@ void Gipf::doMove() {
 	std::cout << "MOVE_COMMITTED\n";
 	badMove.first = false;
 	endTurn();
+}
+
+bool Gipf::stillSomethingToDestroy(vector<vector<Chain>>& intersectingChains, char symbol) {
+	for (auto& intersection : intersectingChains) {
+		for (auto& checkedChain : intersection) {
+			if (checkedChain.color == symbol) {
+				return true;
+			}
+		}
+	}
+	return false;
+}
+
+// returns false if error
+bool Gipf::deleteWrittenIntersections(vector<vector<Chain>>& intersectingChains, set<Chain>& chains,
+	int x, int y, std::pair<int, int>& pushVector, bool movedLine, vector<vector<char>>& boardCopy) {
+	std::string move, start, end;
+	char chainTurn;
+
+	cin >> chainTurn >> start >> start >> end;
+	chainTurn = chainTurn == 'w' ? WHITEPAWN : BLACKPAWN;
+	std::pair<int, int> startOfChain = getCoordinates(start);
+	std::pair<int, int> endOfChain = getCoordinates(end);
+	bool found = false;
+	for (auto& intersection : intersectingChains) {
+		for (auto& checkedChain : intersection) {
+			if ((checkedChain.start == startOfChain && checkedChain.end == endOfChain) ||
+				checkedChain.start == endOfChain && checkedChain.end == startOfChain) {
+				found = true;
+
+				if (chainTurn != getColor(startOfChain)) {
+					std::cout << "WRONG_COLOR_OF_CHOSEN_ROW\n";
+					std::swap(board, boardCopy);
+					currentPlayer()->returnPawn();
+					badMove.first = true;
+					return false;
+				}
+				else {
+					manager.deleteChain(startOfChain, endOfChain, chainTurn);
+					chains = std::move(manager.checkChains(x, y, pushVector, movedLine));
+					intersectingChains = getIntersectingChains(chains);
+					break;
+				}
+			}
+		}
+	}
+
+	if (!found) {
+		std::cout << "WRONG_INDEX_OF_CHOSEN_ROW\n";
+		std::swap(board, boardCopy);
+		currentPlayer()->returnPawn();
+		badMove.first = true;
+		return false;
+	}
+
+	return true;
 }
 
 void Gipf::printBadMoveReason(int valid, std::string& pushSource, std::string& field) {
@@ -948,12 +988,20 @@ char Gipf::currentColor() const {
 	return turn == WHITETURN ? WHITEPAWN : BLACKPAWN;
 }
 
+char Gipf::nextColor() const {
+	return turn == WHITETURN ? BLACKPAWN : WHITEPAWN;
+}
+
 const GipfPlayer* Gipf::currentPlayer() const {
 	return turn == WHITE ? &white : &black;
 }
 
 GipfPlayer* Gipf::currentPlayer() {
 	return turn == WHITE ? &white : &black;
+}
+
+const GipfPlayer* Gipf::nextPlayer() const {
+	return turn == WHITE ? &black : &white;
 }
 
 int Gipf::getPawnsCollect() {
@@ -1301,6 +1349,17 @@ void Gipf::getMove(std::string& move, char& turn, std::string& start, std::strin
 		return;
 	}
 	cin >> end;
+}
+
+bool Gipf::chainHasIntersection(const Chain& chain, vector<vector<Chain>>& intersectingChains) {
+	for (auto& intersection : intersectingChains) {
+		for (auto& curChain : intersection) {
+			if (curChain == chain) {
+				return true;
+			}
+		}
+	}
+	return false;
 }
 
 Gipf::~Gipf() {

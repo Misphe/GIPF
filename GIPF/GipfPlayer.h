@@ -11,7 +11,12 @@ public:
 	GipfPlayer(int startingpawnsAmount, int maxPawns, char symbol) : symbol(symbol) {
 		this->pawnsAmount = startingpawnsAmount;
 		this->maxPawns = maxPawns;
-		this->alive = true;
+		if (startingpawnsAmount > 0) {
+			this->alive = true;
+		}
+		else {
+			this->alive = false;
+		}
 	}
 
 	void set(int set_pawnsAmount, int set_maxPawns) {
@@ -23,6 +28,7 @@ public:
 		this->pawnsAmount = other.pawnsAmount;
 		this->maxPawns = other.maxPawns;
 		this->symbol = other.symbol;
+		this->alive = other.alive;
 		return *this;
 	}
 
@@ -31,7 +37,7 @@ public:
 	}
 
 	bool lost() const {
-		if (pawnsAmount == 0) {
+		if (!alive) {
 			return true;
 		}
 		return false;

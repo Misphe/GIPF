@@ -47,6 +47,7 @@
 #define GEN_ALL_POS_MOV_EXT_NUM 8
 #define WINNING_SEQUENCE_EXIST 9
 #define SOLVE_GAME_STATE 10
+#define IS_GAME_OVER 11
 #define INVALID_COMMAND -1
 
 // Directions

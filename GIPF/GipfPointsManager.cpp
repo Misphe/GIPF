@@ -71,10 +71,6 @@ Chain GipfPointsManager::checkVertically(int col, int row) {
 	}
 
 	return Chain(start, end, game->getColor(start));
-
-	/*if (length >= game->getPawnsCollect()) {
-		deleteChain(start, end, color);
-	}*/
 }
 
 Chain GipfPointsManager::checkHorizontally(int col, int row) {
@@ -95,10 +91,6 @@ Chain GipfPointsManager::checkHorizontally(int col, int row) {
 	}
 
 	return Chain(start, end, game->getColor(start));
-
-	/*if (length >= game->getPawnsCollect()) {
-		deleteChain(start, end, color);
-	}*/
 }
 
 Chain GipfPointsManager::checkDiagonally(int col, int row) {
@@ -119,10 +111,6 @@ Chain GipfPointsManager::checkDiagonally(int col, int row) {
 	}
 
 	return Chain(start, end, game->getColor(start));
-
-	/*if (length >= game->getPawnsCollect()) {
-		deleteChain(start, end, color);
-	}*/
 }
 
 set<Chain> GipfPointsManager::checkMovedLine(int col, int row, std::pair<int, int>& pushVector) {

@@ -193,6 +193,9 @@ void Gipf::executeCommand(int command) {
 		case PRINT_GAME_STATE:
 			printGameState();
 			break;
+		case IS_GAME_OVER:
+			isGameOver();
+			break;
 		case GEN_ALL_POS_MOV:
 			printPossibleMoves();
 			break;
@@ -233,9 +236,9 @@ void Gipf::printPossibleMovesExt() {
 	solver.printPossibleMovesExt();
 }
 
+// not working correct - still in progress
 void Gipf::printSolvedGameState() {
 	int moves = 1;
-	//cin >> moves;
 	solver.printSolvedGameState(moves);
 }
 
@@ -348,20 +351,36 @@ void Gipf::printGameState() {
 	std::cout << getGameState() << "\n";
 }
 
+void Gipf::isGameOver() const {
+	std::string currentState;
+	if (isDeadLock()) {
+		currentState = currentColor() == WHITEPAWN ? BLACKWON : WHITEWON;
+	}
+	else if (white.lost() && currentPlayer() == &white) {
+		currentState = BLACKWON;
+	}
+	else if (black.lost() && currentPlayer() == &black) {
+		currentState = WHITEWON;
+	}
+	else {
+		currentState = IN_PROGRESS;
+	}
+	std::cout << currentState << "\n";
+}
+
 std::string Gipf::getGameState() const {
 	std::string currentState;
 	if (madeBadMove()) {
-		currentState =  "BAD_MOVE " + std::string(1, currentColor()) + " " + badMove.second;
+		currentState = "BAD_MOVE " + std::string(1, currentColor()) + " " + badMove.second;
 	}
-	else if (isDeadLock()) {
-		//currentState = "DEAD_LOCK " + std::string(1, currentColor());
-		currentState = currentColor() == WHITEPAWN ? BLACKWON : WHITEWON;
-	}
-	else if (white.lost()) {
+	else if (white.lost() && currentPlayer() == &white) {
 		currentState = BLACKWON;
 	}
-	else if (black.lost()) {
+	else if (black.lost() && currentPlayer() == &black) {
 		currentState = WHITEWON;
+	}
+	else if (isDeadLock()) {
+		currentState = "DEAD_LOCK " + std::string(1, currentColor());
 	}
 	else {
 		currentState = IN_PROGRESS;
@@ -534,6 +553,7 @@ void Gipf::endTurn() {
 int Gipf::checkIfWrongIndex(std::pair<int, int>& source_p, std::pair<int, int>& field_p) {
 	auto tmp = createBoard(size + 1);
 
+	// a helping board to ilustrate how it works
 	// -1 00 01 02 03 04 05
 	// a4 b5 c6 d7 -1 -1 -1  |-1
 	// a3 b4 c5 d6 e6 -1 -1  |00
@@ -928,6 +948,7 @@ void Gipf::loadGameBoard() {
 	cin >> set_whitePawns >> set_blackPawns >> set_turn;
 	set_turn = set_turn == WHITEPAWN ? WHITETURN : BLACKTURN;
 
+
 	Gipf new_gipf(createBoard(set_size), set_size, set_pawnsCollect,
 		set_whiteMaxPawns, set_blackMaxPawns, set_whitePawns, set_blackPawns, set_turn);
 
@@ -954,8 +975,11 @@ int Gipf::translateCommand(std::string command) {
 	else if (command == "DO_MOVE") {
 		return DO_MOVE;
 	}
-	else if (command == "PRINT_GAME_STATE" || command == "IS_GAME_OVER") {
+	else if (command == "PRINT_GAME_STATE") {
 		return PRINT_GAME_STATE;
+	}
+	else if (command == "IS_GAME_OVER") {
+		return IS_GAME_OVER;
 	}
 	else if (command == "GEN_ALL_POS_MOV" || command == "gen") {
 		return GEN_ALL_POS_MOV;
@@ -1079,7 +1103,6 @@ std::pair<int, int> Gipf::getPushVector(std::string& pushSource, std::string& fi
 			dy = UP;
 			break;
 		case EQUAL:
-			// like g1-g1 so should be error earlier
 			dx = RIGHT;
 			break;
 		case RIGHTSMALLER:

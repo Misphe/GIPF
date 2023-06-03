@@ -31,7 +31,6 @@ public:
 	unordered_set<Gipf> getAllPossibilities(const Gipf& checkedGame);
 	vector<Gipf> makeMove(pair<int, int>& pushSource, pair<int, int>& field, const Gipf& checkedGame);
 
-	// here is stos error
 	vector<Move> getAllPossibleMoveCommands();
 	
 	static void deleteDuplicates(vector<Gipf>& games);

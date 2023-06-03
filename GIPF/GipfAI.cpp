@@ -40,7 +40,7 @@ void GipfAI::printPossibleMovesExt() {
 }
 
 void GipfAI::printSolvedGameState(int moves) {
-	std::cout << getPossibleStateInNTurns(moves);
+	std::cout << getPossibleStateInNTurns(moves) << "\n";
 
 }
 
@@ -163,7 +163,6 @@ unordered_set<Gipf> GipfAI::getAllPossibilities(const Gipf& checkedGame) {
 	return games;
 }
 
-// TODO
 vector<Gipf> GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field, const Gipf& game) {
 	Gipf fakeGame(game);
 	vector<Gipf> games;
@@ -198,18 +197,6 @@ vector<Gipf> GipfAI::makeMove(pair<int, int>& pushSource, pair<int, int>& field,
 	if (intersectingChains.size() == 0) {
 		games.push_back(fakeGame);
 	}
-
-	//for (auto& intersection : intersectingChains) {
-	//	for (auto& chainInIntersection : intersection) {
-	//		Gipf fakeGame2(fakeGame);
-	//		fakeGame2.getManager()->deleteChain(chainInIntersection.start, chainInIntersection.end, chainInIntersection.color);
-
-	//		/*chains = std::move(fakeGame2.getManager()->checkChains(x, y, pushVector, movedLine));
-	//		intersectingChains = fakeGame2.getIntersectingChains(chains);*/
-
-	//		games.push_back(fakeGame2);
-	//	}
-	//}
 
 	if (intersectingChains.size() > 0) {
 		handleIntersectionsCombinations(games, fakeGame, intersectingChains, x, y, pushVector, movedLine);
@@ -277,11 +264,7 @@ void GipfAI::generateChainCombinations(vector<vector<Chain>>& intersectingChains
 	}
 }
 
- 
-// dont question this
-// generate all possible move indexes/commands
-// currently with duplicates
-// STOS IS THROWING ERROR BECAUSE OF EMPLACE_BACK/PUSH_BACK????????
+// get all possible moves the user could input
 vector<Move> GipfAI::getAllPossibleMoveCommands() {
 	auto board = mainGame->getBoard();
 	int size = board.size() / 2 + 1;
@@ -289,7 +272,6 @@ vector<Move> GipfAI::getAllPossibleMoveCommands() {
 	vector<Move> allMoves;
 
 	// add left top corner
-	// STOS error?????
 	allMoves.emplace_back(std::pair<int, int>(-1, -1), std::pair<int, int>(0, 0));
 
 	int boardCol, boardRow;

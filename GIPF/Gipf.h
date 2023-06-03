@@ -97,6 +97,7 @@ public:
 	void setBadMoveState(std::string& pushSource, std::string& field);
 
 	void printGameState();
+	void isGameOver() const;
 	std::string getGameState() const;
 	const bool madeBadMove() const;
 	bool isDeadLock() const;

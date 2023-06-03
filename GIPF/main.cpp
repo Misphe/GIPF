@@ -11,10 +11,10 @@ using std::vector;
 int main() {
 
 	{
-
-	int size = 4, pawnsCollect = 4;
-	int whiteMaxPawns = 15, blackMaxPawns = 15;
-	int whitePawns = 4, blackPawns = 4;
+		// basic board at the start of the game
+		int size = 4, pawnsCollect = 4;
+		int whiteMaxPawns = 15, blackMaxPawns = 15;
+		int whitePawns = 4, blackPawns = 4;
 		vector<vector<Chain>> chains;
 		Chain chain({ { 1,1 }, { 2,2 }, 2 });
 		chains.push_back(vector<Chain>());

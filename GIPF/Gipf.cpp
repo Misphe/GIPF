@@ -236,9 +236,11 @@ void Gipf::printPossibleMovesExt() {
 	solver.printPossibleMovesExt();
 }
 
-// not working correct - still in progress
 void Gipf::printSolvedGameState() {
-	int moves = 1;
+	int moves;
+	cin >> moves;
+	if (moves > 4) moves = 4;
+	if (moves < 1) moves = 1;
 	solver.printSolvedGameState(moves);
 }
 
@@ -456,6 +458,9 @@ bool Gipf::loadBoardState() {
 	int row = 0, col = 0, colStart = 0;
 	int rowSlots = size - 1, usedSlots;
 
+	if (white.getUsedPawns() == white.getMaxPawns() && black.getUsedPawns() == black.getMaxPawns()) {
+		return true;
+	}
 	getchar();
 	for (int row = 0; row < board.size(); row++) {
 
@@ -945,8 +950,15 @@ void Gipf::loadGameBoard() {
 	char set_turn;
 	cin >> set_size >> set_pawnsCollect;
 	cin >> set_whiteMaxPawns >> set_blackMaxPawns;
-	cin >> set_whitePawns >> set_blackPawns >> set_turn;
-	set_turn = set_turn == WHITEPAWN ? WHITETURN : BLACKTURN;
+
+	// needed when using premade maps
+	// cin >> set_whitePawns >> set_blackPawns >> set_turn;
+	// set_turn = set_turn == WHITEPAWN ? WHITETURN : BLACKTURN;
+
+	set_turn = WHITETURN;
+	set_whitePawns = 0;
+	set_blackPawns = 0;
+
 
 
 	Gipf new_gipf(createBoard(set_size), set_size, set_pawnsCollect,

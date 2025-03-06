@@ -40,6 +40,7 @@ Po uruchomieniu programu można korzystać z następujących komend:
 ## Objaśnienie Planszy
 Plansza w grze GIPF ma kształt heksagonu. Dla planszy o wielkości 3, prawdziwy układ pól wygląda następująco:
 
+```
 a4 b5 c6 d7
 a3 b4 c5 d6 e6
 a2 b3 c4 d5 e5 f5
@@ -47,6 +48,7 @@ a1 b2 c3 d4 e4 f4 g4
    b1 c2 d3 e3 f3 g3
       c1 d2 e2 f2 g2
          d1 e1 f1 g1
+```
 
 W programie wiersze są przesunięte, aby uzyskać efekt heksagonalny. Pola na obwodzie planszy (np. a4, b5, g1, d1, b1, e6) są niewidoczne i służą jedynie do określenia, skąd można wstawić pionek.
 

@@ -12,7 +12,7 @@ Aby uruchomić projekt, potrzebujesz:
 
 ## Instrukcja Uruchomienia
 1. Sklonuj repozytorium na swój komputer.
-2. Otwórz plik `*.sln` w Visual Studio.
+2. Otwórz plik `GIPF.sln` w Visual Studio.
 3. Skompiluj i uruchom projekt.
 
 ## Uwaga

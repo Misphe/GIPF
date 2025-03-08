@@ -38,19 +38,35 @@ Po uruchomieniu programu można korzystać z następujących komend:
 - **SOLVE_GAME_STATE** - Sprawdza, czy możliwe jest wygranie gry w określonej liczbie ruchów. Po komendzie należy podać liczbę ruchów (maksymalnie 4).
 
 ## Objaśnienie Planszy
-Plansza w grze GIPF ma kształt heksagonu. Dla planszy o wielkości 3, prawdziwy układ pól wygląda następująco:
+Plansza w grze GIPF ma kształt heksagonu. Dla planszy o wielkości 4, prawdziwy układ pól wygląda następująco:
 
 ```
-a4 b5 c6 d7
-a3 b4 c5 d6 e6
-a2 b3 c4 d5 e5 f5
-a1 b2 c3 d4 e4 f4 g4
-   b1 c2 d3 e3 f3 g3
-      c1 d2 e2 f2 g2
-         d1 e1 f1 g1
+a5 b6 c7 d8 e9
+a4 b5 c6 d7 e8 f8
+a3 b4 c5 d6 e7 f7 g7
+a2 b3 c4 d5 e6 f6 g6 h6
+a1 b2 c3 d4 e5 f5 g5 h5 i5
+   b1 c2 d3 e4 f4 g4 h4 i4
+      c1 d2 e3 f3 g3 h3 i3
+         d1 e2 f2 g2 h2 i2
+            e1 f1 g1 h1 i1
 ```
 
-W programie wiersze są przesunięte, aby uzyskać efekt heksagonalny. Pola na obwodzie planszy (np. a4, b5, g1, d1, b1, e6) są niewidoczne i służą jedynie do określenia, skąd można wstawić pionek.
+Natomaist w programie wyświetlane są następująco:
+
+```
+    _ _ _ _ 
+   _ _ _ _ _ 
+  _ _ _ _ _ _ 
+ _ _ _ _ _ _ _ 
+  _ _ _ _ _ _ 
+   _ _ _ _ _ 
+    _ _ _ _ 
+```
+
+gdzie najbardziej skrajny na lewo punkt to b2, lewy wierzchołek w górnym wierszu to b5, a prawy wierzchołek w dolnym wierszu to h2, itd. 
+
+Pola na obwodzie planszy (np. a4, b5, g1, d1, b1, e6) są niewidoczne i służą jedynie do określenia, skąd można wstawić pionek.
 
 ### Przykład Ruchu
 - Komenda `d a4-b4` postawi pionka na polu `b4`.

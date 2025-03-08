@@ -1,7 +1,7 @@
 # GIPF - Projekt Gry z Solverem
 
 ## Opis Projektu
-Projekt ma na celu stworzenie gry **GIPF** wraz z prostym solverem. Gra GIPF to strategiczna gra planszowa, w której gracze rywalizują, umieszczając i przesuwając pionki na planszy w kształcie heksagonu. Zasady gry można znaleźć w oficjalnym podręczniku: [GIPF Rulebook](https://cdn.1j1ju.com/medias/a9/6b/ca-gipf-rulebook.pdf).
+Projekt ma na celu stworzenie gry **GIPF** wraz z prostym solverem. Gra GIPF to strategiczna gra planszowa, w której gracze rywalizują, umieszczając i przesuwając pionki na planszy w kształcie heksagonu. Zasady gry można znaleźć na stronie: [GIPF Rulebook](https://files.rebel.pl/files/instrukcje/Instrukcja_Gipf_PL.pdf).
 
 Projekt jest dedykowany na platformę **STOS Politechniki Gdańskiej**, która narzuca określone wymagania. W związku z tym, przy uruchamianiu projektu na własnym sprzęcie mogą pojawić się nieoczekiwane błędy.
 
